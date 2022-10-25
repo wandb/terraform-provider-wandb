@@ -19,7 +19,13 @@ func resourceScaffolding() *schema.Resource {
 		DeleteContext: resourceScaffoldingDelete,
 
 		Schema: map[string]*schema.Schema{
-			"sample_attribute": {
+			"name": {
+				// This description is used by the documentation generator and the language server.
+				Description: "Sample attribute.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
+			"bucket_name": {
 				// This description is used by the documentation generator and the language server.
 				Description: "Sample attribute.",
 				Type:        schema.TypeString,

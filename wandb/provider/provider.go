@@ -23,14 +23,34 @@ func init() {
 	// }
 }
 
+// WANDB_BASE_URL name of env var for base URL
+const WandbBaseURLEnvName = "WANDB_BASE_URL"
+
+// WANDB_API_KEY name of env var for API key
+const WandbAPIKeyEnvName = "WANDB_API_KEY"
+
 func New(version string) func() *schema.Provider {
 	return func() *schema.Provider {
 		p := &schema.Provider{
 			DataSourcesMap: map[string]*schema.Resource{
-				"scaffolding_data_source": dataSourceScaffolding(),
+				"wandb_team": dataSourceScaffolding(),
 			},
 			ResourcesMap: map[string]*schema.Resource{
-				"scaffolding_resource": resourceScaffolding(),
+				"wandb_team": resourceScaffolding(),
+			},
+			Schema: map[string]*schema.Schema{
+				"host": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					DefaultFunc: schema.EnvDefaultFunc(WandbBaseURLEnvName, "api.wandb.ai"),
+					Description: "Wandb API URL. This can also be set via the WANDB_BASE_URL environment variable.",
+				},
+				"api_key": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					DefaultFunc: schema.EnvDefaultFunc(WandbAPIKeyEnvName, nil),
+					Description: "(Required unless validate is false) Wandb API key. This can also be set via the WANDB_API_KEY environment variable.",
+				},
 			},
 		}
 

@@ -1,3 +1,3 @@
-resource "scaffolding_resource" "example" {
-  sample_attribute = "foo"
+resource "wandb_team" "example" {
+  name = "foo"
 }
