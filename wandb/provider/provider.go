@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -53,9 +54,8 @@ func New(version string) func() *schema.Provider {
 				},
 			},
 		}
-
+		
 		p.ConfigureContextFunc = configure(version, p)
-
 		return p
 	}
 }
@@ -67,11 +67,13 @@ type apiClient struct {
 }
 
 func configure(version string, p *schema.Provider) func(context.Context, *schema.ResourceData) (any, diag.Diagnostics) {
-	return func(context.Context, *schema.ResourceData) (any, diag.Diagnostics) {
+	return func(ctx context.Context, d *schema.ResourceData) (any, diag.Diagnostics) {
 		// Setup a User-Agent for your API client (replace the provider name for yours):
 		// userAgent := p.UserAgent("terraform-provider-scaffolding", version)
 		// TODO: myClient.UserAgent = userAgent
-
-		return &apiClient{}, nil
+		defaultTimeout := time.Second * 10
+		apiClient := NewClient(d.Get("host").(string), d.Get("api_key").(string), defaultTimeout)
+		
+		return &apiClient, nil
 	}
 }
