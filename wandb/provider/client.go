@@ -104,12 +104,12 @@ func (c *Client) queryProject(method string, endpoint string, api_key string) (e
 	return nil
 }
 
-func (c *Client) CreateTeam(method string, endpoint string, api_key string) (err error) {
+func (c *Client) CreateTeam(method string) (err error) {
 
 	// Organization ID from Organization Name
 	name := "xyzw"
 	params := QueryParams{
-		Query: `query: 
+		Query: `query:
             { 
                 organization (name: $name){
                     id
@@ -224,6 +224,30 @@ func (c *Client) DeleteTeam(name string) (err error) {
 	} else if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("Error deleting team")
 	}
+}
+func (c *Client) ReadTeam(name string) (err error) {
+	params := QueryParams{
+		Query: `query:
+            {
+                entity (name: $name){
+                    id
+					name
+					createdAt
+      				updatedAt
+                }
+            }
+        `,
+		Variables: map[string]interface{}{
+			"name": name,
+		},
+	}
+	resp, err := c.doQuery(params)
+
+	fmt.Printf("Response: %+v\n", resp)
+
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -233,9 +257,9 @@ func (c *Client) DeleteTeam(name string) (err error) {
 // 	defaultTimeout := time.Second * 10
 // 	client := NewClient("https://api.wandb.ai", "19f7df3fa4db872d5e4cea31ed8076e6b1ff5913", defaultTimeout)
 
-//	host := "https://api.wandb.ai"
-//	err := client.CreateTeam("POST", host+"/graphql", "19f7df3fa4db872d5e4cea31ed8076e6b1ff5913")
-//	if err != nil {
-//		fmt.Println(err)
-//	}
-//}
+// 	host := "https://api.wandb.ai"
+// 	err := client.CreateTeam("POST", host + "/graphql", "19f7df3fa4db872d5e4cea31ed8076e6b1ff5913")
+// 	if err != nil{
+// 		fmt.Println(err)
+// 	}
+// }
