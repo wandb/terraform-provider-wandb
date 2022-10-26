@@ -1,4 +1,4 @@
-package main
+package provider
 
 import (
 	"bytes"
@@ -178,13 +178,40 @@ func (c *Client) DeleteTeam(name string) (err error) {
 	return nil
 }
 
-func main() {
-//Testing
-	defaultTimeout := time.Second * 10
-	client := NewClient("https://api.wandb.ai", "19f7df3fa4db872d5e4cea31ed8076e6b1ff5913", defaultTimeout)
-
-	err := client.CreateTeam("POST")
-	if err != nil{
-		fmt.Println(err)
+func (c *Client) ReadTeam(name string) (err error) {
+	params := QueryParams{
+		Query: `query:
+            {
+                entity (name: $name){
+                    id
+					name
+					createdAt
+      				updatedAt
+                }
+            }
+        `,
+		Variables: map[string]interface{}{
+			"name": name,
+		},
 	}
+	resp, err := c.doQuery(params)
+
+	fmt.Printf("Response: %+v\n", resp)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
+
+// func main() {
+// //Testing
+// 	defaultTimeout := time.Second * 10
+// 	client := NewClient("https://api.wandb.ai", "19f7df3fa4db872d5e4cea31ed8076e6b1ff5913", defaultTimeout)
+
+// 	err := client.CreateTeam("POST")
+// 	if err != nil{
+// 		fmt.Println(err)
+// 	}
+// }
