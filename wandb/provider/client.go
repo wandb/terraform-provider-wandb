@@ -118,6 +118,7 @@ func (c *Client) CreateTeam(organization_name string, team_name string, bucket_n
 						storageBucketInfo: {
 							name: $bucketName
 							provider: $bucketProvider
+						}
 					}
 				){
                     entity{
