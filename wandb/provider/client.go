@@ -1,4 +1,4 @@
-package main
+package provider
 
 import (
 	"fmt"
@@ -178,10 +178,12 @@ func (c *Client) CreateTeam(method string, endpoint string, api_key string) (err
 	fmt.Println(string(body))
 
 	var createTeamResult struct {
-		CreateTeamData struct {
-			Entity struct {
-				Id string	`json:"id"`
-				Name string	`json:"name"`
+		CreateTeamData struct{
+			CreateTeam struct {
+				Entity struct {
+					Id string	`json:"id"`
+					Name string	`json:"name"`
+				}
 			}
 		}
 	}
@@ -190,22 +192,23 @@ func (c *Client) CreateTeam(method string, endpoint string, api_key string) (err
 	if err != nil{
 		return err
 	}
-	fmt.Println(createTeamResult.CreateTeamData.Entity.Name)
+	fmt.Println(createTeamResult.CreateTeamData.CreateTeam.Entity.Name)
 
 	return nil
 
 }
 
 
-func main() {
-	defaultTimeout := time.Second * 10
-	client := NewClient("https://api.wandb.ai", "19f7df3fa4db872d5e4cea31ed8076e6b1ff5913", defaultTimeout)
+// func main() {
+	// //Testing
+// 	defaultTimeout := time.Second * 10
+// 	client := NewClient("https://api.wandb.ai", "19f7df3fa4db872d5e4cea31ed8076e6b1ff5913", defaultTimeout)
 
-	host := "https://api.wandb.ai"
-	err := client.CreateTeam("POST", host + "/graphql", "19f7df3fa4db872d5e4cea31ed8076e6b1ff5913")
-	if err != nil{
-		fmt.Println(err)
-	}
-}
+// 	host := "https://api.wandb.ai"
+// 	err := client.CreateTeam("POST", host + "/graphql", "19f7df3fa4db872d5e4cea31ed8076e6b1ff5913")
+// 	if err != nil{
+// 		fmt.Println(err)
+// 	}
+// }
 
 
