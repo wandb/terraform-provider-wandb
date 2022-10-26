@@ -1,4 +1,4 @@
-module github.com/hashicorp/terraform-provider-scaffolding
+module github.com/hashicorp/terraform-provider-wandb
 
 go 1.18
 

@@ -135,36 +135,42 @@ func (c *Client) CreateTeam(method string, endpoint string, api_key string) (err
 
 	var orgResult struct {
 		OrgData struct {
-			ID        string `json:"id"`
-			Available bool   `json:"available"`
-		} //`json:"organization (name: "%s") "`
+			Org struct {
+				Available bool   `json:"available"`
+				ID        string `json:"id"`
+			} `json:"organization"`
+		} `json:"data"`
 	}
+
 	err = json.Unmarshal(body, &orgResult)
 	if err != nil {
 		fmt.Println(err)
 		return err
 	}
 
-	if orgResult.OrgData.Available == false {
+	if orgResult.OrgData.Org.Available == false {
 		fmt.Println("organization doesn't have any teams left")
 	}
-	fmt.Println(string(body))
-	fmt.Println(orgResult.OrgData)
 
 	// Create Team
 	// TODO: input arguments for mutation
-	teamName := "tmp-team"
-	organizationId := orgResult.OrgData.ID
+	teamName := "tmp-team2"
+	organizationId := orgResult.OrgData.Org.ID
 	params = QueryParams{
 		Query: `mutation:
             { 
-                createTeam (teamName: $teamName, organizationId: $organizationId){
+                createTeam (
+					input: {
+						teamName: $teamName
+						organizationId: $organizationId
+					}
+				){
                     entity{
 						id
 						name
 					}
-                }
-            }
+				}
+			}
         `,
 		Variables: map[string]interface{}{
 			"teamName":       teamName,
@@ -186,9 +192,11 @@ func (c *Client) CreateTeam(method string, endpoint string, api_key string) (err
 
 	var createTeamResult struct {
 		CreateTeamData struct {
-			Entity struct {
-				Id   string `json:"id"`
-				Name string `json:"name"`
+			CreateTeam struct {
+				Entity struct {
+					Id   string `json:"id"`
+					Name string `json:"name"`
+				}
 			}
 		}
 	}
@@ -197,7 +205,7 @@ func (c *Client) CreateTeam(method string, endpoint string, api_key string) (err
 	if err != nil {
 		return err
 	}
-	fmt.Println(createTeamResult.CreateTeamData.Entity.Name)
+	fmt.Println(createTeamResult.CreateTeamData.CreateTeam.Entity.Name)
 
 	return nil
 
@@ -220,13 +228,14 @@ func (c *Client) DeleteTeam(name string) (err error) {
 	return nil
 }
 
-func main() {
-	defaultTimeout := time.Second * 10
-	client := NewClient("https://api.wandb.ai", "19f7df3fa4db872d5e4cea31ed8076e6b1ff5913", defaultTimeout)
+// func main() {
+// //Testing
+// 	defaultTimeout := time.Second * 10
+// 	client := NewClient("https://api.wandb.ai", "19f7df3fa4db872d5e4cea31ed8076e6b1ff5913", defaultTimeout)
 
-	host := "https://api.wandb.ai"
-	err := client.CreateTeam("POST", host+"/graphql", "19f7df3fa4db872d5e4cea31ed8076e6b1ff5913")
-	if err != nil {
-		fmt.Println(err)
-	}
-}
+//	host := "https://api.wandb.ai"
+//	err := client.CreateTeam("POST", host+"/graphql", "19f7df3fa4db872d5e4cea31ed8076e6b1ff5913")
+//	if err != nil {
+//		fmt.Println(err)
+//	}
+//}
