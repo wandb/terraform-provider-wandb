@@ -138,32 +138,32 @@ func (c *Client) CreateTeam(method string) (err error) {
 	if orgResult.OrgData.Org.Available == false {
 		fmt.Println("organization doesn't have any teams left")
 	}
-	fmt.Println(string(body))
-	fmt.Println(orgResult.OrgData.Org)
-	fmt.Println(string(orgResult.OrgData.Org.ID))
 
 	// Create Team
 	// TODO: input arguments for mutation
 	teamName := "tmp-team2"
 	organizationId := orgResult.OrgData.Org.ID
 	jsonData := map[string]string{
-		"mutation": fmt.Sprintf(`
-            { 
-                createTeam (teamName: "%s", organizationId: "%s"){
-                    entity{
+		"query": fmt.Sprintf(` 
+			mutation {
+				createTeam (
+					input: {
+						teamName: "%s"
+						organizationId: "%s"
+					}
+				){
+					entity{
 						id
 						name
 					}
-                }
-            }
+				}
+			}
         `,
 			teamName,
 			organizationId,
 		),
 	}
 	jsonValue, _ = json.Marshal(jsonData)
-
-	fmt.Println(string(jsonValue))
 	resp, err = c.doQuery(method, bytes.NewBuffer(jsonValue))
 
 	if err != nil {
@@ -179,9 +179,11 @@ func (c *Client) CreateTeam(method string) (err error) {
 
 	var createTeamResult struct {
 		CreateTeamData struct {
-			Entity struct {
-				Id   string `json:"id"`
-				Name string `json:"name"`
+			CreateTeam struct {
+				Entity struct {
+					Id   string `json:"id"`
+					Name string `json:"name"`
+				}
 			}
 		}
 	}
@@ -190,7 +192,7 @@ func (c *Client) CreateTeam(method string) (err error) {
 	if err != nil {
 		return err
 	}
-	fmt.Println(createTeamResult.CreateTeamData.Entity.Name)
+	fmt.Println(createTeamResult.CreateTeamData.CreateTeam.Entity.Name)
 
 	return nil
 
@@ -224,6 +226,7 @@ func (c *Client) ReadTeam(name string) (err error) {
 }
 
 // func main() {
+// //Testing
 // 	defaultTimeout := time.Second * 10
 // 	client := NewClient("https://api.wandb.ai", "19f7df3fa4db872d5e4cea31ed8076e6b1ff5913", defaultTimeout)
 
