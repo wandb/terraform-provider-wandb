@@ -1,40 +1,40 @@
 package provider
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"time"
-	"encoding/json"
-	"bytes"
-	"io/ioutil"
 )
 
 type (
 	Client struct {
-	 host       string
-	 httpClient *http.Client
-	 apiKey     string
+		host       string
+		httpClient *http.Client
+		apiKey     string
 	}
 )
 
 func NewClient(host string, apiKey string, timeout time.Duration) *Client {
 	client := &http.Client{
-	 Timeout: timeout,
+		Timeout: timeout,
 	}
 	return &Client{
-	 host:       host,
-	 httpClient: client,
-	 apiKey:     apiKey,
+		host:       host,
+		httpClient: client,
+		apiKey:     apiKey,
 	}
-   }
+}
 
-func (c *Client) doQuery(method, endpoint string, api_key string, query *bytes.Buffer) (*http.Response, error) {
-	request, err := http.NewRequest(method, endpoint, query)
+func (c *Client) doQuery(method string, query *bytes.Buffer) (*http.Response, error) {
+	request, err := http.NewRequest(method, c.host, query)
 	if err != nil {
-	 return nil, err
+		return nil, err
 	}
 	request.Header.Add("Content-Type", "application/json")
-	request.Header.Add("Authorization", api_key)
+	request.Header.Add("Authorization", c.apiKey)
 
 	resp, err := c.httpClient.Do(request)
 	if err != nil {
@@ -44,9 +44,9 @@ func (c *Client) doQuery(method, endpoint string, api_key string, query *bytes.B
 }
 
 // Test Function
-func (c *Client) queryProject(method string, endpoint string, api_key string) (err error) {
+func (c *Client) queryProject(method string) (err error) {
 	jsonData := map[string]string{
-        "query": `
+		"query": `
             { 
                 projects (entityName: "ibindlish"){
                     pageInfo{
@@ -55,16 +55,16 @@ func (c *Client) queryProject(method string, endpoint string, api_key string) (e
                 }
             }
         `,
-    }
-    jsonValue, _ := json.Marshal(jsonData)
-	resp, err := c.doQuery(method, endpoint, api_key, bytes.NewBuffer(jsonValue))
+	}
+	jsonValue, _ := json.Marshal(jsonData)
+	resp, err := c.doQuery(method, bytes.NewBuffer(jsonValue))
 
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
 
-   	body, err := ioutil.ReadAll(resp.Body)
+	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
@@ -72,9 +72,9 @@ func (c *Client) queryProject(method string, endpoint string, api_key string) (e
 
 	var projectsResult struct {
 		ProjectsData struct {
-			Projects struct        {
-				PageInfo struct     {
-					HasNextPage bool	`json:"hasNextPage"`
+			Projects struct {
+				PageInfo struct {
+					HasNextPage bool `json:"hasNextPage"`
 				}
 			}
 		}
@@ -91,31 +91,31 @@ func (c *Client) queryProject(method string, endpoint string, api_key string) (e
 	return nil
 }
 
-func (c *Client) CreateTeam(method string, endpoint string, api_key string) (err error) {
+func (c *Client) CreateTeam(method string) (err error) {
 
 	// Organization ID from Organization Name
 	name := "xyzw"
 	jsonDataOrgID := map[string]string{
-        "query":fmt.Sprintf(`
+		"query": fmt.Sprintf(`
             { 
                 organization (name: "%s"){
                     id
 					available
                 }
             }
-        `, 
-		name,
-	),
-    }
-    jsonValue, _ := json.Marshal(jsonDataOrgID)
-	resp, err := c.doQuery(method, endpoint, api_key, bytes.NewBuffer(jsonValue))
+        `,
+			name,
+		),
+	}
+	jsonValue, _ := json.Marshal(jsonDataOrgID)
+	resp, err := c.doQuery(method, bytes.NewBuffer(jsonValue))
 
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
 
-   	body, err := ioutil.ReadAll(resp.Body)
+	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
@@ -123,14 +123,14 @@ func (c *Client) CreateTeam(method string, endpoint string, api_key string) (err
 	var orgResult struct {
 		OrgData struct {
 			Org struct {
-			Available bool `json:"available"`
-			ID string `json:"id"`
-		}	`json:"organization"`
-	} `json:"data"`
+				Available bool   `json:"available"`
+				ID        string `json:"id"`
+			} `json:"organization"`
+		} `json:"data"`
 	}
-	
+
 	err = json.Unmarshal(body, &orgResult)
-	if err != nil{
+	if err != nil {
 		fmt.Println(err)
 		return err
 	}
@@ -147,7 +147,7 @@ func (c *Client) CreateTeam(method string, endpoint string, api_key string) (err
 	teamName := "tmp-team2"
 	organizationId := orgResult.OrgData.Org.ID
 	jsonData := map[string]string{
-        "mutation": fmt.Sprintf(`
+		"mutation": fmt.Sprintf(`
             { 
                 createTeam (teamName: "%s", organizationId: "%s"){
                     entity{
@@ -157,21 +157,21 @@ func (c *Client) CreateTeam(method string, endpoint string, api_key string) (err
                 }
             }
         `,
-		teamName,
-		organizationId,
-	),
-    }
+			teamName,
+			organizationId,
+		),
+	}
 	jsonValue, _ = json.Marshal(jsonData)
 
 	fmt.Println(string(jsonValue))
-	resp, err = c.doQuery(method, endpoint, api_key, bytes.NewBuffer(jsonValue))
+	resp, err = c.doQuery(method, bytes.NewBuffer(jsonValue))
 
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
 
-   	body, err = ioutil.ReadAll(resp.Body)
+	body, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
@@ -180,14 +180,14 @@ func (c *Client) CreateTeam(method string, endpoint string, api_key string) (err
 	var createTeamResult struct {
 		CreateTeamData struct {
 			Entity struct {
-				Id string	`json:"id"`
-				Name string	`json:"name"`
+				Id   string `json:"id"`
+				Name string `json:"name"`
 			}
 		}
 	}
 
 	err = json.Unmarshal(body, &createTeamResult)
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	fmt.Println(createTeamResult.CreateTeamData.Entity.Name)
@@ -196,6 +196,32 @@ func (c *Client) CreateTeam(method string, endpoint string, api_key string) (err
 
 }
 
+func (c *Client) ReadTeam(name string) (err error) {
+	queryData := map[string]string{
+		"query": fmt.Sprintf(`
+            {
+                entity (name: "%s"){
+                    id
+					name
+					createdAt
+      				updatedAt
+                }
+            }
+        `,
+			name,
+		),
+	}
+	jsonValue, _ := json.Marshal(queryData)
+	resp, err := c.doQuery("GET", bytes.NewBuffer(jsonValue))
+
+	fmt.Printf("Response: %+v\n", resp)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
 
 // func main() {
 // 	defaultTimeout := time.Second * 10
@@ -207,5 +233,3 @@ func (c *Client) CreateTeam(method string, endpoint string, api_key string) (err
 // 		fmt.Println(err)
 // 	}
 // }
-
-
