@@ -43,16 +43,12 @@ func resourceWandbTeam() *schema.Resource {
 func resourceWandbTeamCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// use the meta value to retrieve your client from the provider configure method
 	// client := meta.(*apiClient)
-
-	idFromAPI := "my-id"
-	d.SetId(idFromAPI)
-
-	// write logs using the tflog package
-	// see https://pkg.go.dev/github.com/hashicorp/terraform-plugin-log/tflog
-	// for more information
-	tflog.Trace(ctx, "created a resource")
-
-	return diag.Errorf("not implemented")
+	client := meta.(*Client)
+	err := client.CreateTeam(d.Get("organization_name").(string), d.Get("team_name").(string), d.Get("bucket_name").(string), d.Get("bucket_provider").(string))
+	if err != nil {
+		return diag.Errorf(err.Error())
+	}
+	return nil
 }
 
 func resourceWandbTeamRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

@@ -1,4 +1,4 @@
-package provider
+package main
 
 import (
 	"bytes"
@@ -54,63 +54,12 @@ func base64Encode(content string) string {
 	return base64.StdEncoding.EncodeToString([]byte(content))
 }
 
-// Test Function
-func (c *Client) queryProject(method string, endpoint string, api_key string) (err error) {
-	params := QueryParams{
-		Query: `query:
-            { 
-                projects (entityName: $entityName){
-                    pageInfo{
-						hasNextPage
-					}
-                }
-            }
-        `,
-		Variables: map[string]interface{}{
-			"entityName": "ibindlish",
-		},
-	}
-	resp, err := c.doQuery(params)
-
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-	fmt.Println(string(body))
-
-	var projectsResult struct {
-		ProjectsData struct {
-			Projects struct {
-				PageInfo struct {
-					HasNextPage bool `json:"hasNextPage"`
-				}
-			}
-		}
-	}
-
-	err = json.Unmarshal(body, &projectsResult)
-	fmt.Println(projectsResult.ProjectsData.Projects.PageInfo.HasNextPage)
-
-	if err = json.Unmarshal(body, &projectsResult); err != nil {
-		fmt.Println(projectsResult.ProjectsData.Projects.PageInfo.HasNextPage)
-		return err
-	}
-
-	return nil
-}
-
-func (c *Client) CreateTeam(method string) (err error) {
+func (c *Client) CreateTeam(organization_name string, team_name string, bucket_name string, bucket_provider string) (err error) {
 
 	// Organization ID from Organization Name
-	name := "xyzw"
 	params := QueryParams{
-		Query: `query:
-            { 
+		Query: `
+            query availableOrg($name: String!) { 
                 organization (name: $name){
                     id
 					available
@@ -118,7 +67,7 @@ func (c *Client) CreateTeam(method string) (err error) {
             }
         `,
 		Variables: map[string]interface{}{
-			"name": name,
+			"name": organization_name,
 		},
 	}
 	resp, err := c.doQuery(params)
@@ -151,14 +100,15 @@ func (c *Client) CreateTeam(method string) (err error) {
 	if orgResult.OrgData.Org.Available == false {
 		fmt.Println("organization doesn't have any teams left")
 	}
-
+	
 	// Create Team
-	// TODO: input arguments for mutation
-	teamName := "tmp-team2"
-	organizationId := orgResult.OrgData.Org.ID
+	organization_id := orgResult.OrgData.Org.ID
 	params = QueryParams{
-		Query: `mutation:
-            { 
+		Query: `
+		mutation CreateTeam (
+			$teamName: String!
+			$organizationId: String!
+		){
                 createTeam (
 					input: {
 						teamName: $teamName
@@ -173,8 +123,8 @@ func (c *Client) CreateTeam(method string) (err error) {
 			}
         `,
 		Variables: map[string]interface{}{
-			"teamName":       teamName,
-			"organizationId": organizationId,
+			"teamName":       team_name,
+			"organizationId": organization_id,
 		},
 	}
 	resp, err = c.doQuery(params)
@@ -224,42 +174,17 @@ func (c *Client) DeleteTeam(name string) (err error) {
 	} else if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("Error deleting team")
 	}
-}
-func (c *Client) ReadTeam(name string) (err error) {
-	params := QueryParams{
-		Query: `query:
-            {
-                entity (name: $name){
-                    id
-					name
-					createdAt
-      				updatedAt
-                }
-            }
-        `,
-		Variables: map[string]interface{}{
-			"name": name,
-		},
-	}
-	resp, err := c.doQuery(params)
-
-	fmt.Printf("Response: %+v\n", resp)
-
-	if err != nil {
-		return err
-	}
 
 	return nil
 }
 
-// func main() {
-// //Testing
-// 	defaultTimeout := time.Second * 10
-// 	client := NewClient("https://api.wandb.ai", "19f7df3fa4db872d5e4cea31ed8076e6b1ff5913", defaultTimeout)
+func main() {
+//Testing
+	defaultTimeout := time.Second * 10
+	client := NewClient("https://api.wandb.ai", "19f7df3fa4db872d5e4cea31ed8076e6b1ff5913", defaultTimeout)
 
-// 	host := "https://api.wandb.ai"
-// 	err := client.CreateTeam("POST", host + "/graphql", "19f7df3fa4db872d5e4cea31ed8076e6b1ff5913")
-// 	if err != nil{
-// 		fmt.Println(err)
-// 	}
-// }
+	err := client.CreateTeam("POST")
+	if err != nil{
+		fmt.Println(err)
+	}
+}
