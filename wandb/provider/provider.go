@@ -37,7 +37,7 @@ func New(version string) func() *schema.Provider {
 				"wandb_team": dataSourceScaffolding(),
 			},
 			ResourcesMap: map[string]*schema.Resource{
-				"wandb_team": resourceScaffolding(),
+				"wandb_team": resourceWandbTeam(),
 			},
 			Schema: map[string]*schema.Schema{
 				"host": {
@@ -54,16 +54,10 @@ func New(version string) func() *schema.Provider {
 				},
 			},
 		}
-		
+
 		p.ConfigureContextFunc = configure(version, p)
 		return p
 	}
-}
-
-type apiClient struct {
-	// Add whatever fields, client or connection info, etc. here
-	// you would need to setup to communicate with the upstream
-	// API.
 }
 
 func configure(version string, p *schema.Provider) func(context.Context, *schema.ResourceData) (any, diag.Diagnostics) {
@@ -73,7 +67,6 @@ func configure(version string, p *schema.Provider) func(context.Context, *schema
 		// TODO: myClient.UserAgent = userAgent
 		defaultTimeout := time.Second * 10
 		apiClient := NewClient(d.Get("host").(string), d.Get("api_key").(string), defaultTimeout)
-		
 		return &apiClient, nil
 	}
 }

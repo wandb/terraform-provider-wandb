@@ -26,7 +26,6 @@ func TestAccResourceScaffolding(t *testing.T) {
 }
 
 const testAccResourceScaffolding = `
-resource "scaffolding_resource" "foo" {
-  sample_attribute = "bar"
+resource "wandb_team" "foo" {
 }
 `

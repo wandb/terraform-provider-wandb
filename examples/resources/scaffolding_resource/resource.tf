@@ -1,3 +1,4 @@
 resource "wandb_team" "example" {
-  name = "foo"
+  team_name = "foo"
+  organization_name = "my org"
 }

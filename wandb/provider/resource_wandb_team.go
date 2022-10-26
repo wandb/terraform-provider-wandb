@@ -2,32 +2,37 @@ package provider
 
 import (
 	"context"
-
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func resourceScaffolding() *schema.Resource {
+func resourceWandbTeam() *schema.Resource {
 	return &schema.Resource{
 		// This description is used by the documentation generator and the language server.
-		Description: "Sample resource in the Terraform provider scaffolding.",
+		Description: "Resource for a team in Wandb",
 
-		CreateContext: resourceScaffoldingCreate,
-		ReadContext:   resourceScaffoldingRead,
-		UpdateContext: resourceScaffoldingUpdate,
-		DeleteContext: resourceScaffoldingDelete,
+		CreateContext: resourceWandbTeamCreate,
+		ReadContext:   resourceWandbTeamRead,
+		UpdateContext: resourceWandbTeamUpdate,
+		DeleteContext: resourceWandbTeamDelete,
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			"team_name": {
 				// This description is used by the documentation generator and the language server.
-				Description: "Sample attribute.",
+				Description: "The name for the team",
+				Type:        schema.TypeString,
+				Optional:    false,
+			},
+			"organization_name": {
+				// This description is used by the documentation generator and the language server.
+				Description: "The cloud storage bucket to use for the team",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
-			"bucket_name": {
+			"storage_bucket_name": {
 				// This description is used by the documentation generator and the language server.
-				Description: "Sample attribute.",
+				Description: "The cloud storage bucket to use for the team",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
@@ -35,7 +40,7 @@ func resourceScaffolding() *schema.Resource {
 	}
 }
 
-func resourceScaffoldingCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceWandbTeamCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// use the meta value to retrieve your client from the provider configure method
 	// client := meta.(*apiClient)
 
@@ -50,23 +55,25 @@ func resourceScaffoldingCreate(ctx context.Context, d *schema.ResourceData, meta
 	return diag.Errorf("not implemented")
 }
 
-func resourceScaffoldingRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceWandbTeamRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// use the meta value to retrieve your client from the provider configure method
 	// client := meta.(*apiClient)
 
 	return diag.Errorf("not implemented")
 }
 
-func resourceScaffoldingUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceWandbTeamUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// use the meta value to retrieve your client from the provider configure method
 	// client := meta.(*apiClient)
 
 	return diag.Errorf("not implemented")
 }
 
-func resourceScaffoldingDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	// use the meta value to retrieve your client from the provider configure method
-	// client := meta.(*apiClient)
-
-	return diag.Errorf("not implemented")
+func resourceWandbTeamDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	client := meta.(*Client)
+	err := client.DeleteTeam(d.Get("team_name").(string))
+	if err != nil {
+		return diag.Errorf(err.Error())
+	}
+	return nil
 }
