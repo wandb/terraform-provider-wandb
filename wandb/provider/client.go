@@ -107,12 +107,17 @@ func (c *Client) CreateTeam(organization_name string, team_name string, bucket_n
 		Query: `
 		mutation CreateTeam (
 			$teamName: String!
-			$organizationId: String!
+			$organizationId: String
+			$bucketName: String
+			$bucketProvider: String
 		){
                 createTeam (
 					input: {
 						teamName: $teamName
 						organizationId: $organizationId
+						storageBucketInfo: {
+							name: $bucketName
+							provider: $bucketProvider
 					}
 				){
                     entity{
@@ -125,6 +130,8 @@ func (c *Client) CreateTeam(organization_name string, team_name string, bucket_n
 		Variables: map[string]interface{}{
 			"teamName":       team_name,
 			"organizationId": organization_id,
+			"bucketName": bucket_name,
+			"bucketProvider": bucket_provider,
 		},
 	}
 	resp, err = c.doQuery(params)
