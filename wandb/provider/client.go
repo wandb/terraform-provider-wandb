@@ -1,4 +1,4 @@
-package provider
+package main
 
 import (
 	"fmt"
@@ -70,7 +70,6 @@ func (c *Client) queryProject(method string, endpoint string, api_key string) (e
 	}
 	fmt.Println(string(body))
 
-	type rowStruct []interface{}
 	var projectsResult struct {
 		ProjectsData struct {
 			Projects struct        {
@@ -92,16 +91,115 @@ func (c *Client) queryProject(method string, endpoint string, api_key string) (e
 	return nil
 }
 
-/*
+func (c *Client) CreateTeam(method string, endpoint string, api_key string) (err error) {
+
+	// Organization ID from Organization Name
+	name := "xyzw"
+	jsonDataOrgID := map[string]string{
+        "query":fmt.Sprintf(`
+            { 
+                organization (name: "%s"){
+                    id
+					available
+                }
+            }
+        `, 
+		name,
+	),
+    }
+    jsonValue, _ := json.Marshal(jsonDataOrgID)
+	resp, err := c.doQuery(method, endpoint, api_key, bytes.NewBuffer(jsonValue))
+
+	if err != nil{
+		return err
+	}
+	defer resp.Body.Close()
+
+   	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	var orgResult struct {
+		OrgData struct {
+			ID	string	`json:"id"`
+			Available	bool	`json:"available"`
+		}	//`json:"organization (name: "%s") "`
+	}
+	err = json.Unmarshal(body, &orgResult)
+	if err != nil{
+		fmt.Println(err)
+		return err
+	}
+
+	if orgResult.OrgData.Available == false {
+		fmt.Println("organization doesn't have any teams left")
+	}
+	fmt.Println(string(body))
+	fmt.Println(orgResult.OrgData)
+
+	// Create Team
+	// TODO: input arguments for mutation
+	teamName := "tmp-team"
+	organizationId := orgResult.OrgData.ID
+	jsonData := map[string]string{
+        "mutation": fmt.Sprintf(`
+            { 
+                createTeam (teamName: "%s", organizationId: "%s"){
+                    entity{
+						id
+						name
+					}
+                }
+            }
+        `,
+		teamName,
+		organizationId,
+	),
+    }
+	jsonValue, _ = json.Marshal(jsonData)
+	resp, err = c.doQuery(method, endpoint, api_key, bytes.NewBuffer(jsonValue))
+
+	if err != nil{
+		return err
+	}
+	defer resp.Body.Close()
+
+   	body, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	fmt.Println(string(body))
+
+	var createTeamResult struct {
+		CreateTeamData struct {
+			Entity struct {
+				Id string	`json:"id"`
+				Name string	`json:"name"`
+			}
+		}
+	}
+
+	err = json.Unmarshal(body, &createTeamResult)
+	if err != nil{
+		return err
+	}
+	fmt.Println(createTeamResult.CreateTeamData.Entity.Name)
+
+	return nil
+
+}
+
+
 func main() {
 	defaultTimeout := time.Second * 10
 	client := NewClient("https://api.wandb.ai", "19f7df3fa4db872d5e4cea31ed8076e6b1ff5913", defaultTimeout)
 
 	host := "https://api.wandb.ai"
-	err := client.queryProject("POST", host + "/graphql")
+	err := client.CreateTeam("POST", host + "/graphql", "19f7df3fa4db872d5e4cea31ed8076e6b1ff5913")
 	if err != nil{
 		fmt.Println(err)
 	}
 }
-*/
+
 
