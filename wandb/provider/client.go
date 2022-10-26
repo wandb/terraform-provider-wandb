@@ -62,7 +62,6 @@ func (c *Client) CreateTeam(organization_name string, team_name string, bucket_n
             query availableOrg($name: String!) { 
                 organization (name: $name){
                     id
-					available
                 }
             }
         `,
@@ -85,7 +84,6 @@ func (c *Client) CreateTeam(organization_name string, team_name string, bucket_n
 	var orgResult struct {
 		OrgData struct {
 			Org struct {
-				Available bool   `json:"available"`
 				ID        string `json:"id"`
 			} `json:"organization"`
 		} `json:"data"`
@@ -97,10 +95,6 @@ func (c *Client) CreateTeam(organization_name string, team_name string, bucket_n
 		return err
 	}
 
-	if orgResult.OrgData.Org.Available == false {
-		fmt.Println("organization doesn't have any teams left")
-	}
-	
 	// Create Team
 	organization_id := orgResult.OrgData.Org.ID
 	params = QueryParams{
