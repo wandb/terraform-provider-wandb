@@ -224,7 +224,10 @@ func (c *Client) DeleteTeam(name string) (err error) {
 	} else if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("Error deleting team")
 	}
+
+	return nil
 }
+
 func (c *Client) ReadTeam(name string) (err error) {
 	params := QueryParams{
 		Query: `query:
