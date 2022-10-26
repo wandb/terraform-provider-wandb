@@ -122,26 +122,30 @@ func (c *Client) CreateTeam(method string, endpoint string, api_key string) (err
 
 	var orgResult struct {
 		OrgData struct {
-			ID	string	`json:"id"`
-			Available	bool	`json:"available"`
-		}	//`json:"organization (name: "%s") "`
+			Org struct {
+			Available bool `json:"available"`
+			ID string `json:"id"`
+		}	`json:"organization"`
+	} `json:"data"`
 	}
+	
 	err = json.Unmarshal(body, &orgResult)
 	if err != nil{
 		fmt.Println(err)
 		return err
 	}
 
-	if orgResult.OrgData.Available == false {
+	if orgResult.OrgData.Org.Available == false {
 		fmt.Println("organization doesn't have any teams left")
 	}
 	fmt.Println(string(body))
-	fmt.Println(orgResult.OrgData)
+	fmt.Println(orgResult.OrgData.Org)
+	fmt.Println(string(orgResult.OrgData.Org.ID))
 
 	// Create Team
 	// TODO: input arguments for mutation
-	teamName := "tmp-team"
-	organizationId := orgResult.OrgData.ID
+	teamName := "tmp-team2"
+	organizationId := orgResult.OrgData.Org.ID
 	jsonData := map[string]string{
         "mutation": fmt.Sprintf(`
             { 
@@ -158,6 +162,8 @@ func (c *Client) CreateTeam(method string, endpoint string, api_key string) (err
 	),
     }
 	jsonValue, _ = json.Marshal(jsonData)
+
+	fmt.Println(string(jsonValue))
 	resp, err = c.doQuery(method, endpoint, api_key, bytes.NewBuffer(jsonValue))
 
 	if err != nil{
@@ -191,15 +197,15 @@ func (c *Client) CreateTeam(method string, endpoint string, api_key string) (err
 }
 
 
-func main() {
-	defaultTimeout := time.Second * 10
-	client := NewClient("https://api.wandb.ai", "19f7df3fa4db872d5e4cea31ed8076e6b1ff5913", defaultTimeout)
+// func main() {
+// 	defaultTimeout := time.Second * 10
+// 	client := NewClient("https://api.wandb.ai", "19f7df3fa4db872d5e4cea31ed8076e6b1ff5913", defaultTimeout)
 
-	host := "https://api.wandb.ai"
-	err := client.CreateTeam("POST", host + "/graphql", "19f7df3fa4db872d5e4cea31ed8076e6b1ff5913")
-	if err != nil{
-		fmt.Println(err)
-	}
-}
+// 	host := "https://api.wandb.ai"
+// 	err := client.CreateTeam("POST", host + "/graphql", "19f7df3fa4db872d5e4cea31ed8076e6b1ff5913")
+// 	if err != nil{
+// 		fmt.Println(err)
+// 	}
+// }
 
 
