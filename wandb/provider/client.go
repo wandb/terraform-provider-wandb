@@ -11,10 +11,18 @@ import (
 )
 
 type Team struct {
-	id        string
-	name      string
-	createdAt int
-	updatedAt int
+	Id        string `json:"id"`
+	Name      string `json:"name"`
+	CreatedAt string `json:"createdAt"`
+	UpdatedAt string `json:"updatedAt"`
+}
+
+type ReadTeamData struct {
+	Entity Team `json:"entity"`
+}
+
+type ReadTeamResponse struct {
+	Data ReadTeamData `json:"data"`
 }
 
 type Client struct {
@@ -196,7 +204,7 @@ func (c *Client) DeleteTeam(name string) (err error) {
 	return nil
 }
 
-func (c *Client) ReadTeam(name string) (err error) {
+func (c *Client) ReadTeam(name string) (team *Team, err error) {
 	params := QueryParams{
 		Query: `
             query ReadTeam($name: String!) {
@@ -218,11 +226,15 @@ func (c *Client) ReadTeam(name string) (err error) {
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return err
+		return nil, err
 	}
+
+	var graphqlResp ReadTeamResponse
+	json.Unmarshal(body, &graphqlResp)
+
 	fmt.Println(string(body))
 
-	return nil
+	return &graphqlResp.Data.Entity, nil
 }
 
 // func main() {
@@ -230,8 +242,10 @@ func (c *Client) ReadTeam(name string) (err error) {
 // 	defaultTimeout := time.Second * 10
 // 	client := NewClient("https://api.wandb.ai", "19f7df3fa4db872d5e4cea31ed8076e6b1ff5913", defaultTimeout)
 
-// 	err := client.CreateTeam("xyzw", "team-tmp", "", "")
-// 	if err != nil{
+// 	team, err := client.ReadTeam("stacey")
+// 	if err != nil {
 // 		fmt.Println(err)
 // 	}
+
+// 	fmt.Printf("Team: %+v\n", team)
 // }

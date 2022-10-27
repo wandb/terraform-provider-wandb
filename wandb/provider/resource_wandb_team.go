@@ -2,7 +2,6 @@ package provider
 
 import (
 	"context"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -43,6 +42,21 @@ func resourceWandbTeam() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
+			"id": {
+				Description: "The ID of the team",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"created_at": {
+				Description: "When the team was created",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"updated_at": {
+				Description: "When the team was last updated",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 		},
 	}
 }
@@ -62,10 +76,16 @@ func resourceWandbTeamRead(ctx context.Context, d *schema.ResourceData, meta any
 	// use the meta value to retrieve your client from the provider configure method
 	// client := meta.(*apiClient)
 
-	client := NewClient("https://api.wandb.ai", "19f7df3fa4db872d5e4cea31ed8076e6b1ff5913", time.Second*10)
-	client.ReadTeam(d.Get("team_name").(string))
+	client := meta.(*Client)
+	team, err := client.ReadTeam(d.Get("team_name").(string))
+	if err != nil {
+		return diag.Errorf(err.Error())
+	}
+	d.Set("id", team.Id)
+	d.Set("created_at", team.CreatedAt)
+	d.Set("updated_at", team.UpdatedAt)
 
-	return diag.Errorf("not implemented")
+	return nil
 }
 
 func resourceWandbTeamUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
