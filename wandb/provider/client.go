@@ -10,6 +10,11 @@ import (
 	"time"
 )
 
+type StorageBucketInfo struct {
+	Name string `json:"name"`
+	Provider string `json:"provider"`
+}
+
 type Team struct {
 	Id        string `json:"id"`
 	Name      string `json:"name"`
@@ -121,17 +126,13 @@ func (c *Client) CreateTeam(organization_name string, team_name string, bucket_n
 		mutation CreateTeam (
 			$teamName: String!
 			$organizationId: String
-			$bucketName: String
-			$bucketProvider: String
+			$storageBucketInfo: StorageBucketInfoInput
 		){
                 createTeam (
 					input: {
 						teamName: $teamName
 						organizationId: $organizationId
-						storageBucketInfo: {
-							name: $bucketName
-							provider: $bucketProvider
-						}
+						storageBucketInfo: $storageBucketInfo
 					}
 				){
                     entity{
@@ -150,11 +151,12 @@ func (c *Client) CreateTeam(organization_name string, team_name string, bucket_n
 	if organization_name != "" {
 		params.Variables["organizationId"] = organization_id
 	}
-	if bucket_name != "" {
-		params.Variables["bucketName"] = bucket_name
-	}
-	if bucket_provider != "" {
-		params.Variables["bucketProvider"] = bucket_provider
+	if bucket_name != "" && bucket_provider != ""{
+		// params.Variables["bucketName"] = bucket_name
+		params.Variables["storageBucketInfo"] = StorageBucketInfo{
+			Name: bucket_name,
+			Provider: bucket_provider,
+		}
 	}
 
 	resp, err := c.doQuery(params)
@@ -189,7 +191,7 @@ func (c *Client) CreateTeam(organization_name string, team_name string, bucket_n
 
 func (c *Client) DeleteTeam(name string) (err error) {
 	params := QueryParams{
-		Query: `mutation { deleteTeam(input:{teamName:$teamName}){success}}`,
+		Query: `mutation DeleteTeam ($teamName: String!){ deleteTeam(input:{teamName:$teamName}){success}}`,
 		Variables: map[string]interface{}{
 			"teamName": name,
 		},
@@ -239,10 +241,10 @@ func (c *Client) ReadTeam(name string) (team *Team, err error) {
 // func main() {
 // 	// Testing
 // 	defaultTimeout := time.Second * 10
-// 	client := NewClient("https://api.wandb.ai", "19f7df3fa4db872d5e4cea31ed8076e6b1ff5913", defaultTimeout)
+// 	client := NewClient("https://t4l.wandb.ml", "local-bb3a44320434bd75aa88725906cf51e8b1f541ed", defaultTimeout)
 
-// 	team, err := client.ReadTeam("stacey")
-// 	team, err := client.CreateTeam("xyzw", "tmp-team", "", "")
+// 	// team, err := client.ReadTeam("stacey")
+// 	team, err := client.CreateTeam("", "tmp-team", "", "")
 // 	if err != nil {
 // 		fmt.Println(err)
 // 	}

@@ -95,6 +95,9 @@ func resourceWandbTeamRead(ctx context.Context, d *schema.ResourceData, meta any
 	d.Set("id", team.Id)
 	d.Set("created_at", team.CreatedAt)
 	d.Set("updated_at", team.UpdatedAt)
+	d.Set("organization_name", d.Get("organization_name").(string))
+	d.Set("storage_bucket_name", d.Get("storage_bucket_name").(string))
+	d.Set("storage_bucket_provider", d.Get("storage_bucket_provider").(string))
 
 	return nil
 }

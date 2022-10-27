@@ -1,11 +1,11 @@
 provider "wandb" {
-  host = "https://api.wandb.ai"
-  api_key = "19f7df3fa4db872d5e4cea31ed8076e6b1ff5913"
+  host = "https://t4l.wandb.ml"
+  api_key = "local-bb3a44320434bd75aa88725906cf51e8b1f541ed"
 }
 
 resource "wandb_team" "example" {
-  team_name = "team-tmp"
-  organization_name = "xyzw"
-  storage_bucket_name = "my-bucket"
-  storage_bucket_provider = "gcs"
+  team_name = "team-tmp2"
+  organization_name = ""
+  storage_bucket_name = "abc-humorous-killdeer"
+  storage_bucket_provider = "GCP"
 }
