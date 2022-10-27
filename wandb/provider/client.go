@@ -10,6 +10,13 @@ import (
 	"time"
 )
 
+type Team struct {
+	id        string
+	name      string
+	createdAt int
+	updatedAt int
+}
+
 type Client struct {
 	host       string
 	httpClient *http.Client
@@ -224,12 +231,14 @@ func (c *Client) DeleteTeam(name string) (err error) {
 	} else if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("Error deleting team")
 	}
+	return nil
 }
+
 func (c *Client) ReadTeam(name string) (err error) {
 	params := QueryParams{
-		Query: `query:
-            {
-                entity (name: $name){
+		Query: `
+            query ReadTeam($name: String!) {
+                entity (name: $name) {
                     id
 					name
 					createdAt
@@ -243,23 +252,24 @@ func (c *Client) ReadTeam(name string) (err error) {
 	}
 	resp, err := c.doQuery(params)
 
-	fmt.Printf("Response: %+v\n", resp)
+	defer resp.Body.Close()
 
+	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
+	fmt.Println(string(body))
 
 	return nil
 }
 
 // func main() {
-// //Testing
+// 	// Testing
 // 	defaultTimeout := time.Second * 10
 // 	client := NewClient("https://api.wandb.ai", "19f7df3fa4db872d5e4cea31ed8076e6b1ff5913", defaultTimeout)
 
-// 	host := "https://api.wandb.ai"
-// 	err := client.CreateTeam("POST", host + "/graphql", "19f7df3fa4db872d5e4cea31ed8076e6b1ff5913")
-// 	if err != nil{
+// 	err := client.ReadTeam("stacey")
+// 	if err != nil {
 // 		fmt.Println(err)
 // 	}
 // }
