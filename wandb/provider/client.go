@@ -69,7 +69,7 @@ func base64Encode(content string) string {
 	return base64.StdEncoding.EncodeToString([]byte(content))
 }
 
-func (c *Client) CreateTeam(organization_name string, team_name string, bucket_name string, bucket_provider string) (err error) {
+func (c *Client) CreateTeam(organization_name string, team_name string, bucket_name string, bucket_provider string) (*Team, error) {
 
 	// Organization ID from Organization Name
 	// var params QueryParams
@@ -90,13 +90,13 @@ func (c *Client) CreateTeam(organization_name string, team_name string, bucket_n
 		resp, err := c.doQuery(params)
 
 		if err != nil {
-			return err
+			return nil, err
 		}
 		defer resp.Body.Close()
 
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		var orgResult struct {
@@ -110,7 +110,7 @@ func (c *Client) CreateTeam(organization_name string, team_name string, bucket_n
 		err = json.Unmarshal(body, &orgResult)
 		if err != nil {
 			fmt.Println(err)
-			return err
+			return nil, err
 		}
 		organization_id = orgResult.OrgData.Org.ID
 	}
@@ -137,6 +137,8 @@ func (c *Client) CreateTeam(organization_name string, team_name string, bucket_n
                     entity{
 						id
 						name
+						createdAt
+						updatedAt
 					}
 				}
 			}
@@ -158,33 +160,30 @@ func (c *Client) CreateTeam(organization_name string, team_name string, bucket_n
 	resp, err := c.doQuery(params)
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	fmt.Println(string(body))
 
 	var createTeamResult struct {
 		CreateTeamData struct {
 			CreateTeam struct {
-				Entity struct {
-					Id   string `json:"id"`
-					Name string `json:"name"`
-				}
-			}
-		}
+				Entity Team `json:"entity"`
+			}	`json:createTeam"`
+		} 	`json:"data"`
 	}
 
 	err = json.Unmarshal(body, &createTeamResult)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	fmt.Println(createTeamResult.CreateTeamData.CreateTeam.Entity.Name)
-	return nil
+	fmt.Println(createTeamResult.CreateTeamData.CreateTeam)
+	return &createTeamResult.CreateTeamData.CreateTeam.Entity, nil
 
 }
 
@@ -243,6 +242,7 @@ func (c *Client) ReadTeam(name string) (team *Team, err error) {
 // 	client := NewClient("https://api.wandb.ai", "19f7df3fa4db872d5e4cea31ed8076e6b1ff5913", defaultTimeout)
 
 // 	team, err := client.ReadTeam("stacey")
+// 	team, err := client.CreateTeam("xyzw", "tmp-team", "", "")
 // 	if err != nil {
 // 		fmt.Println(err)
 // 	}
