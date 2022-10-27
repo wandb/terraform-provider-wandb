@@ -22,7 +22,7 @@ func resourceWandbTeam() *schema.Resource {
 				// This description is used by the documentation generator and the language server.
 				Description: "The name for the team",
 				Type:        schema.TypeString,
-				Optional:    false,
+				Required:    true,
 			},
 			"organization_name": {
 				// This description is used by the documentation generator and the language server.
