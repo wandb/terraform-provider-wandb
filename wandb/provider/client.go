@@ -61,115 +61,69 @@ func base64Encode(content string) string {
 	return base64.StdEncoding.EncodeToString([]byte(content))
 }
 
-// Test Function
-func (c *Client) queryProject(method string, endpoint string, api_key string) (err error) {
-	params := QueryParams{
-		Query: `query:
-            { 
-                projects (entityName: $entityName){
-                    pageInfo{
-						hasNextPage
-					}
-                }
-            }
-        `,
-		Variables: map[string]interface{}{
-			"entityName": "ibindlish",
-		},
-	}
-	resp, err := c.doQuery(params)
-
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-	fmt.Println(string(body))
-
-	var projectsResult struct {
-		ProjectsData struct {
-			Projects struct {
-				PageInfo struct {
-					HasNextPage bool `json:"hasNextPage"`
-				}
-			}
-		}
-	}
-
-	err = json.Unmarshal(body, &projectsResult)
-	fmt.Println(projectsResult.ProjectsData.Projects.PageInfo.HasNextPage)
-
-	if err = json.Unmarshal(body, &projectsResult); err != nil {
-		fmt.Println(projectsResult.ProjectsData.Projects.PageInfo.HasNextPage)
-		return err
-	}
-
-	return nil
-}
-
-func (c *Client) CreateTeam(method string) (err error) {
+func (c *Client) CreateTeam(organization_name string, team_name string, bucket_name string, bucket_provider string) (err error) {
 
 	// Organization ID from Organization Name
-	name := "xyzw"
-	params := QueryParams{
-		Query: `query:
-            { 
-                organization (name: $name){
-                    id
-					available
-                }
-            }
-        `,
-		Variables: map[string]interface{}{
-			"name": name,
-		},
-	}
-	resp, err := c.doQuery(params)
+	// var params QueryParams
+	var organization_id string
+	if organization_name != "" {
+		params := QueryParams{
+			Query: `
+				query availableOrg($name: String!) { 
+					organization (name: $name){
+						id
+					}
+				}
+			`,
+			Variables: map[string]interface{}{
+				"name": organization_name,
+			},
+		}
+		resp, err := c.doQuery(params)
 
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
 
-	var orgResult struct {
-		OrgData struct {
-			Org struct {
-				Available bool   `json:"available"`
-				ID        string `json:"id"`
-			} `json:"organization"`
-		} `json:"data"`
-	}
+		var orgResult struct {
+			OrgData struct {
+				Org struct {
+					ID string `json:"id"`
+				} `json:"organization"`
+			} `json:"data"`
+		}
 
-	err = json.Unmarshal(body, &orgResult)
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-
-	if orgResult.OrgData.Org.Available == false {
-		fmt.Println("organization doesn't have any teams left")
+		err = json.Unmarshal(body, &orgResult)
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
+		organization_id = orgResult.OrgData.Org.ID
 	}
 
 	// Create Team
-	// TODO: input arguments for mutation
-	teamName := "tmp-team2"
-	organizationId := orgResult.OrgData.Org.ID
-	params = QueryParams{
-		Query: `mutation:
-            { 
+	params := QueryParams{
+		Query: `
+		mutation CreateTeam (
+			$teamName: String!
+			$organizationId: String
+			$bucketName: String
+			$bucketProvider: String
+		){
                 createTeam (
 					input: {
 						teamName: $teamName
 						organizationId: $organizationId
+						storageBucketInfo: {
+							name: $bucketName
+							provider: $bucketProvider
+						}
 					}
 				){
                     entity{
@@ -180,18 +134,27 @@ func (c *Client) CreateTeam(method string) (err error) {
 			}
         `,
 		Variables: map[string]interface{}{
-			"teamName":       teamName,
-			"organizationId": organizationId,
+			"teamName": team_name,
 		},
 	}
-	resp, err = c.doQuery(params)
+	if organization_name != "" {
+		params.Variables["organizationId"] = organization_id
+	}
+	if bucket_name != "" {
+		params.Variables["bucketName"] = bucket_name
+	}
+	if bucket_provider != "" {
+		params.Variables["bucketProvider"] = bucket_provider
+	}
+
+	resp, err := c.doQuery(params)
 
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
 
-	body, err = ioutil.ReadAll(resp.Body)
+	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
@@ -213,7 +176,6 @@ func (c *Client) CreateTeam(method string) (err error) {
 		return err
 	}
 	fmt.Println(createTeamResult.CreateTeamData.CreateTeam.Entity.Name)
-
 	return nil
 
 }
@@ -268,8 +230,8 @@ func (c *Client) ReadTeam(name string) (err error) {
 // 	defaultTimeout := time.Second * 10
 // 	client := NewClient("https://api.wandb.ai", "19f7df3fa4db872d5e4cea31ed8076e6b1ff5913", defaultTimeout)
 
-// 	err := client.ReadTeam("stacey")
-// 	if err != nil {
+// 	err := client.CreateTeam("xyzw", "team-tmp", "", "")
+// 	if err != nil{
 // 		fmt.Println(err)
 // 	}
 // }

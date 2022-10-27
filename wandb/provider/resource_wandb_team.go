@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -28,13 +27,19 @@ func resourceWandbTeam() *schema.Resource {
 			},
 			"organization_name": {
 				// This description is used by the documentation generator and the language server.
-				Description: "The cloud storage bucket to use for the team",
+				Description: "The organization name",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
 			"storage_bucket_name": {
 				// This description is used by the documentation generator and the language server.
 				Description: "The cloud storage bucket to use for the team",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
+			"storage_bucket_provider": {
+				// This description is used by the documentation generator and the language server.
+				Description: "The cloud storage bucket provider",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
@@ -45,16 +50,12 @@ func resourceWandbTeam() *schema.Resource {
 func resourceWandbTeamCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// use the meta value to retrieve your client from the provider configure method
 	// client := meta.(*apiClient)
-
-	idFromAPI := "my-id"
-	d.SetId(idFromAPI)
-
-	// write logs using the tflog package
-	// see https://pkg.go.dev/github.com/hashicorp/terraform-plugin-log/tflog
-	// for more information
-	tflog.Trace(ctx, "created a resource")
-
-	return diag.Errorf("not implemented")
+	client := meta.(*Client)
+	err := client.CreateTeam(d.Get("organization_name").(string), d.Get("team_name").(string), d.Get("storage_bucket_name").(string), d.Get("storage_bucket_provider").(string))
+	if err != nil {
+		return diag.Errorf(err.Error())
+	}
+	return nil
 }
 
 func resourceWandbTeamRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
