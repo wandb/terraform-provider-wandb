@@ -67,6 +67,6 @@ func configure(version string, p *schema.Provider) func(context.Context, *schema
 		// TODO: myClient.UserAgent = userAgent
 		defaultTimeout := time.Second * 10
 		apiClient := NewClient(d.Get("host").(string), d.Get("api_key").(string), defaultTimeout)
-		return &apiClient, nil
+		return apiClient, nil
 	}
 }
