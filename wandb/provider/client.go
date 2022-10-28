@@ -59,7 +59,7 @@ func (c *Client) CreateTeam(organization_name string, team_name string, bucket_n
 	// Organization ID from Organization Name
 	// var params QueryParams
 	var organization_id string
-	if organization_name != ""{
+	if organization_name != "" {
 		params := QueryParams{
 			Query: `
 				query availableOrg($name: String!) { 
@@ -73,25 +73,25 @@ func (c *Client) CreateTeam(organization_name string, team_name string, bucket_n
 			},
 		}
 		resp, err := c.doQuery(params)
-	
+
 		if err != nil {
 			return err
 		}
 		defer resp.Body.Close()
-	
+
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
 			return err
 		}
-	
+
 		var orgResult struct {
 			OrgData struct {
 				Org struct {
-					ID        string `json:"id"`
+					ID string `json:"id"`
 				} `json:"organization"`
 			} `json:"data"`
 		}
-	
+
 		err = json.Unmarshal(body, &orgResult)
 		if err != nil {
 			fmt.Println(err)
@@ -127,16 +127,16 @@ func (c *Client) CreateTeam(organization_name string, team_name string, bucket_n
 			}
         `,
 		Variables: map[string]interface{}{
-			"teamName":       team_name,
+			"teamName": team_name,
 		},
 	}
-	if organization_name != ""{
+	if organization_name != "" {
 		params.Variables["organizationId"] = organization_id
 	}
-	if bucket_name != ""{
+	if bucket_name != "" {
 		params.Variables["bucketName"] = bucket_name
 	}
-	if bucket_provider != ""{
+	if bucket_provider != "" {
 		params.Variables["bucketProvider"] = bucket_provider
 	}
 
@@ -214,6 +214,59 @@ func (c *Client) ReadTeam(name string) (err error) {
 		return err
 	}
 
+	return nil
+}
+
+func (c *Client) CreateUser(email string, admin bool) (err error) {
+	params := QueryParams{
+		Query: `mutation CreateUser (
+					$email: String!
+					$admin: Boolean
+				){
+	          	createUser (input: {email: $email, admin: $admin}){
+						user {
+							id
+							name
+							username
+							email
+							admin
+							deletedAt
+						}
+	          }
+	      }
+	  `,
+		Variables: map[string]interface{}{
+			"email": email,
+			"admin": admin,
+		},
+	}
+	_, err = c.doQuery(params)
+	return err
+}
+
+func (c *Client) sendInviteEmail(email string) (err error) {
+	jsonBytes, err := json.Marshal(map[string]string{
+		"email": email,
+	})
+	if err != nil {
+		return err
+	}
+	url := fmt.Sprintf("%s/admin/invite_email", c.host)
+	request, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(jsonBytes))
+	if err != nil {
+		return err
+	}
+	request.Header.Add("Content-Type", "application/json")
+	authHeader := fmt.Sprintf("api:%s", c.apiKey)
+	request.Header.Add("Authorization", fmt.Sprintf("Basic %s", base64Encode(authHeader)))
+	request.Header.Add("Origin", c.host)
+
+	resp, err := c.httpClient.Do(request)
+	if err != nil {
+		return err
+	} else if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("Error sending invite email")
+	}
 	return nil
 }
 

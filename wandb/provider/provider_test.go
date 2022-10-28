@@ -11,8 +11,23 @@ import (
 // to create a provider server to which the CLI can reattach.
 var providerFactories = map[string]func() (*schema.Provider, error){
 	"wandb": func() (*schema.Provider, error) {
-		return New("dev")(), nil
+		return initAccProvider(), nil
 	},
+}
+
+func initAccProvider() *schema.Provider {
+	p := New("dev")()
+	p.ConfigureContextFunc = configure("dev", p)
+
+	return p
+}
+
+func testAccProvider(t *testing.T, accProviders map[string]func() (*schema.Provider, error)) func() (*schema.Provider, error) {
+	accProvider, ok := accProviders["wandb"]
+	if !ok {
+		t.Fatal("could not find wandb provider")
+	}
+	return accProvider
 }
 
 func TestProvider(t *testing.T) {
