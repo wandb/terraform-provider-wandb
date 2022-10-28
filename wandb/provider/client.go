@@ -10,6 +10,26 @@ import (
 	"time"
 )
 
+type StorageBucketInfo struct {
+	Name     string `json:"name"`
+	Provider string `json:"provider"`
+}
+
+type Team struct {
+	Id        string `json:"id"`
+	Name      string `json:"name"`
+	CreatedAt string `json:"createdAt"`
+	UpdatedAt string `json:"updatedAt"`
+}
+
+type ReadTeamData struct {
+	Entity Team `json:"entity"`
+}
+
+type ReadTeamResponse struct {
+	Data ReadTeamData `json:"data"`
+}
+
 type Client struct {
 	host       string
 	httpClient *http.Client
@@ -54,7 +74,7 @@ func base64Encode(content string) string {
 	return base64.StdEncoding.EncodeToString([]byte(content))
 }
 
-func (c *Client) CreateTeam(organization_name string, team_name string, bucket_name string, bucket_provider string) (err error) {
+func (c *Client) CreateTeam(organization_name string, team_name string, bucket_name string, bucket_provider string) (*Team, error) {
 
 	// Organization ID from Organization Name
 	// var params QueryParams
@@ -75,13 +95,13 @@ func (c *Client) CreateTeam(organization_name string, team_name string, bucket_n
 		resp, err := c.doQuery(params)
 
 		if err != nil {
-			return err
+			return nil, err
 		}
 		defer resp.Body.Close()
 
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		var orgResult struct {
@@ -95,7 +115,7 @@ func (c *Client) CreateTeam(organization_name string, team_name string, bucket_n
 		err = json.Unmarshal(body, &orgResult)
 		if err != nil {
 			fmt.Println(err)
-			return err
+			return nil, err
 		}
 		organization_id = orgResult.OrgData.Org.ID
 	}
@@ -106,22 +126,20 @@ func (c *Client) CreateTeam(organization_name string, team_name string, bucket_n
 		mutation CreateTeam (
 			$teamName: String!
 			$organizationId: String
-			$bucketName: String
-			$bucketProvider: String
+			$storageBucketInfo: StorageBucketInfoInput
 		){
                 createTeam (
 					input: {
 						teamName: $teamName
 						organizationId: $organizationId
-						storageBucketInfo: {
-							name: $bucketName
-							provider: $bucketProvider
-						}
+						storageBucketInfo: $storageBucketInfo
 					}
 				){
                     entity{
 						id
 						name
+						createdAt
+						updatedAt
 					}
 				}
 			}
@@ -133,49 +151,47 @@ func (c *Client) CreateTeam(organization_name string, team_name string, bucket_n
 	if organization_name != "" {
 		params.Variables["organizationId"] = organization_id
 	}
-	if bucket_name != "" {
-		params.Variables["bucketName"] = bucket_name
-	}
-	if bucket_provider != "" {
-		params.Variables["bucketProvider"] = bucket_provider
+	if bucket_name != "" && bucket_provider != "" {
+		// params.Variables["bucketName"] = bucket_name
+		params.Variables["storageBucketInfo"] = StorageBucketInfo{
+			Name:     bucket_name,
+			Provider: bucket_provider,
+		}
 	}
 
 	resp, err := c.doQuery(params)
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	fmt.Println(string(body))
 
 	var createTeamResult struct {
 		CreateTeamData struct {
 			CreateTeam struct {
-				Entity struct {
-					Id   string `json:"id"`
-					Name string `json:"name"`
-				}
-			}
-		}
+				Entity Team `json:"entity"`
+			} `json:createTeam"`
+		} `json:"data"`
 	}
 
 	err = json.Unmarshal(body, &createTeamResult)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	fmt.Println(createTeamResult.CreateTeamData.CreateTeam.Entity.Name)
-	return nil
+	fmt.Println(createTeamResult.CreateTeamData.CreateTeam)
+	return &createTeamResult.CreateTeamData.CreateTeam.Entity, nil
 
 }
 
 func (c *Client) DeleteTeam(name string) (err error) {
 	params := QueryParams{
-		Query: `mutation { deleteTeam(input:{teamName:$teamName}){success}}`,
+		Query: `mutation DeleteTeam ($teamName: String!){ deleteTeam(input:{teamName:$teamName}){success}}`,
 		Variables: map[string]interface{}{
 			"teamName": name,
 		},
@@ -186,15 +202,14 @@ func (c *Client) DeleteTeam(name string) (err error) {
 	} else if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("Error deleting team")
 	}
-
 	return nil
 }
 
-func (c *Client) ReadTeam(name string) (err error) {
+func (c *Client) ReadTeam(name string) (team *Team, err error) {
 	params := QueryParams{
-		Query: `query:
-            {
-                entity (name: $name){
+		Query: `
+            query ReadTeam($name: String!) {
+                entity (name: $name) {
                     id
 					name
 					createdAt
@@ -208,13 +223,19 @@ func (c *Client) ReadTeam(name string) (err error) {
 	}
 	resp, err := c.doQuery(params)
 
-	fmt.Printf("Response: %+v\n", resp)
+	defer resp.Body.Close()
 
+	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	var graphqlResp ReadTeamResponse
+	json.Unmarshal(body, &graphqlResp)
+
+	fmt.Println(string(body))
+
+	return &graphqlResp.Data.Entity, nil
 }
 
 func (c *Client) CreateUser(email string, admin bool) (err error) {
@@ -271,12 +292,15 @@ func (c *Client) sendInviteEmail(email string) (err error) {
 }
 
 // func main() {
-// //Testing
+// 	// Testing
 // 	defaultTimeout := time.Second * 10
-// 	client := NewClient("https://api.wandb.ai", "19f7df3fa4db872d5e4cea31ed8076e6b1ff5913", defaultTimeout)
+// 	client := NewClient("https://t4l.wandb.ml", "local-bb3a44320434bd75aa88725906cf51e8b1f541ed", defaultTimeout)
 
-// 	err := client.CreateTeam("xyzw", "team-tmp", "", "")
-// 	if err != nil{
+// 	// team, err := client.ReadTeam("stacey")
+// 	team, err := client.CreateTeam("", "tmp-team", "", "")
+// 	if err != nil {
 // 		fmt.Println(err)
 // 	}
+
+// 	fmt.Printf("Team: %+v\n", team)
 // }
