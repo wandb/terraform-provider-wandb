@@ -6,6 +6,6 @@ provider "wandb" {
 resource "wandb_team" "example" {
   team_name = "team-tmp2"
   organization_name = ""
-  storage_bucket_name = "abc-humorous-killdeer"
+  storage_bucket_name = "hackweek-intense-kitten"
   storage_bucket_provider = "GCP"
 }

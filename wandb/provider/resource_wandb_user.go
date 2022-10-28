@@ -45,6 +45,8 @@ func resourceWandbUserCreate(ctx context.Context, d *schema.ResourceData, meta a
 	}
 
 	d.SetId(d.Get("email").(string))
+	d.Set("email", d.Get("email").(string))
+	d.Set("admin", d.Get("admin").(bool))
 	return nil
 }
 
@@ -52,7 +54,11 @@ func resourceWandbUserRead(ctx context.Context, d *schema.ResourceData, meta any
 	// use the meta value to retrieve your client from the provider configure method
 	// client := meta.(*apiClient)
 
-	return diag.Errorf("not implemented")
+	// return diag.Errorf("not implemented")
+	d.SetId(d.Get("email").(string))
+	d.Set("email", d.Get("email").(string))
+	d.Set("admin", d.Get("admin").(bool))
+	return nil
 }
 
 func resourceWandbUserUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -66,5 +72,6 @@ func resourceWandbUserDelete(ctx context.Context, d *schema.ResourceData, meta a
 	// use the meta value to retrieve your client from the provider configure method
 	// client := meta.(*apiClient)
 
-	return diag.Errorf("not implemented")
+	// return diag.Errorf("not implemented")
+	return nil
 }
