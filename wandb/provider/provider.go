@@ -34,7 +34,7 @@ func New(version string) func() *schema.Provider {
 	return func() *schema.Provider {
 		p := &schema.Provider{
 			DataSourcesMap: map[string]*schema.Resource{
-				"wandb_team": dataSourceScaffolding(),
+				"wandb_user": resourceWandbUser(),
 			},
 			ResourcesMap: map[string]*schema.Resource{
 				"wandb_team": resourceWandbTeam(),
