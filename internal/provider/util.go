@@ -157,7 +157,10 @@ func stripResourceArgsAndResourceFields(resourceConfig, resourceType string) (st
 	}
 
 	if _, ok := resourceArgs["resource_args"]; ok {
-		resourceArgs = resourceArgs["resource_args"].(map[string]interface{})
+		resourceArgs, ok := resourceArgs["resource_args"].(map[string]interface{})
+		if !ok {
+			return "", fmt.Errorf("resource_args is not a map")
+		}
 		if _, ok := resourceArgs[resourceType]; ok {
 			resourceBytes, err := json.Marshal(resourceArgs[resourceType])
 			if err != nil {
@@ -172,17 +175,22 @@ func stripResourceArgsAndResourceFields(resourceConfig, resourceType string) (st
 	}
 }
 
-func hasResourceArgsAndResourceFields(resourceConfig, resourceType string) bool {
+func hasResourceArgsAndResourceFields(resourceConfig, resourceType string) (bool, error) {
 	var resourceArgs map[string]interface{}
 	if err := json.Unmarshal([]byte(resourceConfig), &resourceArgs); err != nil {
-		return false
+		return false, err
 	}
 
 	if _, ok := resourceArgs["resource_args"]; ok {
-		resourceArgs = resourceArgs["resource_args"].(map[string]interface{})
+		resourceArgs, ok := resourceArgs["resource_args"].(map[string]interface{})
+		if !ok {
+			return false, fmt.Errorf("resource_args is not a map")
+		}
 		if _, ok := resourceArgs[resourceType]; ok {
-			return true
+			return true, nil
+		} else {
+			return false, fmt.Errorf("resource type %s not found in resource_args", resourceType)
 		}
 	}
-	return false
+	return false, nil
 }

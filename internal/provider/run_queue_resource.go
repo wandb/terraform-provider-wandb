@@ -257,7 +257,12 @@ func (r *RunQueueResource) Read(ctx context.Context, req resource.ReadRequest, r
 
 	// Check if the state resource config has resource args and fields
 	// if it doesn't we need to strip it from the returned config
-	if !hasResourceArgsAndResourceFields(data.ResourceConfig.ValueString(), data.Resource.ValueString()) {
+	hasFields, err := hasResourceArgsAndResourceFields(data.ResourceConfig.ValueString(), data.Resource.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("Error checking for resource args and fields", err.Error())
+		return
+	}
+	if !hasFields {
 		config, err := stripResourceArgsAndResourceFields(string(byteConfig), runQueue.DefaultResourceConfig.Resource)
 		if err != nil {
 			resp.Diagnostics.AddError("Error stripping resource args and fields", err.Error())
