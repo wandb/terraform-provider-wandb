@@ -10,9 +10,7 @@ import (
 
 var (
 	testAccProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
-		"wandb": func() (tfprotov6.ProviderServer, error) {
-			return providerserver.NewProtocol6(New("test")())(), nil
-		},
+		"wandb": providerserver.NewProtocol6WithError(New("test")()),
 	}
 )
 
