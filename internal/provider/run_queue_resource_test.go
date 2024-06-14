@@ -23,7 +23,7 @@ func TestAccRunQueueResource_basic(t *testing.T) {
 				Config: testAccRunQueueResourceConfig(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRunQueueResourceExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "entity_name", "kylegoyette"),
+					resource.TestCheckResourceAttr(resourceName, "entity_name", "entity_name"),
 					resource.TestCheckResourceAttr(resourceName, "name", "example-queue-test"),
 					resource.TestCheckResourceAttr(resourceName, "resource", "kubernetes"),
 					resource.TestCheckResourceAttr(resourceName, "prioritization_mode", "V0"),
@@ -101,8 +101,8 @@ provider "wandb" {
 }
 
 resource "wandb_run_queue" "test" {
-  entity_name         = "kylegoyette"
-  name          = "example-queue-test2"
+  entity_name         = "entity_name"
+  name          = "example-queue"
   resource            = "kubernetes"
   resource_config     = jsonencode({
     apiVersion = "batch/v1",
