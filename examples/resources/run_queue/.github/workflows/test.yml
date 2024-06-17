@@ -84,5 +84,6 @@ jobs:
       - env:
           TF_ACC: "1"
           WANDB_API_KEY: ${{ secrets.WANDB_SVC_API_KEY }}
+          WANDB_BASE_URL: "https://api.wandb.ai"
         run: go test -v -cover ./internal/provider/
         timeout-minutes: 10
