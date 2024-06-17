@@ -83,5 +83,6 @@ jobs:
       - run: go mod download
       - env:
           TF_ACC: "1"
+          WANDB_API_KEY: ${{ secrets.WANDB_SVC_API_KEY }}
         run: go test -v -cover ./internal/provider/
         timeout-minutes: 10
