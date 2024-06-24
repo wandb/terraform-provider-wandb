@@ -23,8 +23,8 @@ func TestAccRunQueueResource_basic(t *testing.T) {
 				Config: testAccRunQueueResourceConfig(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRunQueueResourceExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "entity_name", "entity_name"),
-					resource.TestCheckResourceAttr(resourceName, "name", "example-queue-test"),
+					resource.TestCheckResourceAttr(resourceName, "entity_name", "terraform-acceptance-test"),
+					resource.TestCheckResourceAttr(resourceName, "name", "example-queue"),
 					resource.TestCheckResourceAttr(resourceName, "resource", "kubernetes"),
 					resource.TestCheckResourceAttr(resourceName, "prioritization_mode", "V0"),
 				),
@@ -111,6 +111,9 @@ resource "wandb_run_queue" "test" {
       name = "{{example-variable}}"
     }
   })
+  template_variables  = jsonencode({
+    example-variable = {
+		
   prioritization_mode = "V0"
   external_links      = {
     "label": "https://example.com"
