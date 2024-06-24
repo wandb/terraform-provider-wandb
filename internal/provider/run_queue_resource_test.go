@@ -101,7 +101,7 @@ provider "wandb" {
 }
 
 resource "wandb_run_queue" "test" {
-  entity_name         = "entity_name"
+  entity_name         = "terraform-acceptance-test"
   name          = "example-queue"
   resource            = "kubernetes"
   resource_config     = jsonencode({
