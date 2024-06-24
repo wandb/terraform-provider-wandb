@@ -5,28 +5,28 @@ resource "wandb_run_queue" "tf_example" {
   resource = "kubernetes"
 
   resource_config = jsonencode({
-      apiVersion = "batch/v1",
-      kind       = "Job",
-      metadata = {
-        name = "{{example_variable}}"
-      },
-      spec = {
-        template = {
-          spec = {
-            containers = [{
-              name = "example-container",
-            }],
-            restartPolicy = "Never"
-          }
+    apiVersion = "batch/v1",
+    kind       = "Job",
+    metadata = {
+      name = "{{example_variable}}"
+    },
+    spec = {
+      template = {
+        spec = {
+          containers = [{
+            name = "example-container",
+          }],
+          restartPolicy = "Never"
         }
       }
+    }
   })
 
   template_variables = jsonencode({
     example_variable = {
       description = "An example variable",
       schema = {
-        type    = "string"
+        type = "string"
       }
     }
   })
