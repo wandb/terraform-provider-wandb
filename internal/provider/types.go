@@ -46,3 +46,10 @@ type UpsertRunQueueInput struct {
 	PrioritizationMode *string `json:"prioritizationMode"`
 	ExternalLinks      *string `json:"externalLinks"`
 }
+
+type UpsertRunQueueResponse struct {
+	UpsertRunQueue struct {
+		Success bool   `json:"success"`
+		Errors  string `json:"configSchemaValidationErrors"`
+	} `json:"upsertRunQueue"`
+}

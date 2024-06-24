@@ -146,53 +146,11 @@ func (r *RunQueueResource) Create(ctx context.Context, req resource.CreateReques
 		ExternalLinks:      externalLinks,
 	}
 
-	// Create the run_queue using GraphQL client
-	gqlReq := graphql.NewRequest(`
-		mutation UpsertRunQueue(
-			$entityName: String!,
-			$projectName: String!,
-			$queueName: String!,
-			$resourceType: String!,
-			$resourceConfig: JSONString!,
-			$templateVariables: JSONString,
-			$prioritizationMode: RunQueuePrioritizationMode,
-			$externalLinks: JSONString,
-		) { 
-			upsertRunQueue(input: {
-				entityName: $entityName,
-				projectName: $projectName,
-				queueName: $queueName,
-				resourceType: $resourceType,
-				resourceConfig: $resourceConfig,
-				templateVariables: $templateVariables,
-				prioritizationMode: $prioritizationMode,
-				externalLinks: $externalLinks,
-			}) {
-				success
-				configSchemaValidationErrors
-			}
-		}
-	`)
+	result, err := upsertRunQueue(ctx, input, r.client)
 
-	gqlReq.Var("entityName", input.EntityName)
-	gqlReq.Var("projectName", "model-registry")
-	gqlReq.Var("queueName", input.QueueName)
-	gqlReq.Var("resourceType", input.ResourceType)
-	gqlReq.Var("resourceConfig", input.ResourceConfig)
-	gqlReq.Var("templateVariables", input.TemplateVariables)
-	gqlReq.Var("prioritizationMode", input.PrioritizationMode)
-	gqlReq.Var("externalLinks", input.ExternalLinks)
-
-	var result struct {
-		UpsertRunQueue struct {
-			Success bool   `json:"success"`
-			Errors  string `json:"configSchemaValidationErrors"`
-		} `json:"upsertRunQueue"`
-	}
-
-	if err := r.client.Run(ctx, gqlReq, &result); err != nil {
+	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error creating run queue",
+			"Error updating run queue",
 			"Could not create run queue, unexpected error: "+err.Error(),
 		)
 		return
@@ -332,50 +290,9 @@ func (r *RunQueueResource) Update(ctx context.Context, req resource.UpdateReques
 		ExternalLinks:      externalLinks,
 	}
 
-	gqlReq := graphql.NewRequest(`
-		mutation UpsertRunQueue(
-			$entityName: String!,
-			$projectName: String!,
-			$queueName: String!,
-			$resourceType: String!,
-			$resourceConfig: JSONString!,
-			$templateVariables: JSONString,
-			$prioritizationMode: RunQueuePrioritizationMode,
-			$externalLinks: JSONString,
-		) { 
-			upsertRunQueue(input: {
-				entityName: $entityName,
-				projectName: $projectName,
-				queueName: $queueName,
-				resourceType: $resourceType,
-				resourceConfig: $resourceConfig,
-				templateVariables: $templateVariables,
-				prioritizationMode: $prioritizationMode,
-				externalLinks: $externalLinks,
-			}) {
-				success
-				configSchemaValidationErrors
-			}
-		}
-	`)
+	result, err := upsertRunQueue(ctx, input, r.client)
 
-	gqlReq.Var("entityName", input.EntityName)
-	gqlReq.Var("projectName", "model-registry")
-	gqlReq.Var("queueName", input.QueueName)
-	gqlReq.Var("resourceType", input.ResourceType)
-	gqlReq.Var("resourceConfig", input.ResourceConfig)
-	gqlReq.Var("templateVariables", input.TemplateVariables)
-	gqlReq.Var("prioritizationMode", input.PrioritizationMode)
-	gqlReq.Var("externalLinks", input.ExternalLinks)
-
-	var result struct {
-		UpsertRunQueue struct {
-			Success bool   `json:"success"`
-			Errors  string `json:"configSchemaValidationErrors"`
-		} `json:"upsertRunQueue"`
-	}
-
-	if err := r.client.Run(ctx, gqlReq, &result); err != nil {
+	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating run queue",
 			"Could not create run queue, unexpected error: "+err.Error(),
@@ -463,4 +380,47 @@ func (r *RunQueueResource) Delete(ctx context.Context, req resource.DeleteReques
 
 func (r *RunQueueResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+func upsertRunQueue(ctx context.Context, input UpsertRunQueueInput, client *GraphQLClientWithHeaders) (UpsertRunQueueResponse, error) {
+	gqlReq := graphql.NewRequest(`
+		mutation UpsertRunQueue(
+			$entityName: String!,
+			$projectName: String!,
+			$queueName: String!,
+			$resourceType: String!,
+			$resourceConfig: JSONString!,
+			$templateVariables: JSONString,
+			$prioritizationMode: RunQueuePrioritizationMode,
+			$externalLinks: JSONString,
+		) { 
+			upsertRunQueue(input: {
+				entityName: $entityName,
+				projectName: $projectName,
+				queueName: $queueName,
+				resourceType: $resourceType,
+				resourceConfig: $resourceConfig,
+				templateVariables: $templateVariables,
+				prioritizationMode: $prioritizationMode,
+				externalLinks: $externalLinks,
+			}) {
+				success
+				configSchemaValidationErrors
+			}
+		}
+	`)
+
+	gqlReq.Var("entityName", input.EntityName)
+	gqlReq.Var("projectName", "model-registry")
+	gqlReq.Var("queueName", input.QueueName)
+	gqlReq.Var("resourceType", input.ResourceType)
+	gqlReq.Var("resourceConfig", input.ResourceConfig)
+	gqlReq.Var("templateVariables", input.TemplateVariables)
+	gqlReq.Var("prioritizationMode", input.PrioritizationMode)
+	gqlReq.Var("externalLinks", input.ExternalLinks)
+
+	var result UpsertRunQueueResponse
+
+	err := client.Run(ctx, gqlReq, &result)
+	return result, err
 }
