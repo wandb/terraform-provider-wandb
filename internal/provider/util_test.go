@@ -63,13 +63,18 @@ func TestParseCompositeID_InvalidFormat(t *testing.T) {
 }
 
 func TestTemplateVarsWithNamesListToMap(t *testing.T) {
-	schema := `{"type":"string", "default":"default1", "enum":["default1","default2"]}`
+	schema := TVSchema{
+		Type:    "string",
+		Default: "default1",
+		Enum:    []string{"default1", "default2"},
+	}
+	schemaString := `{"type":"string", "default":"default1", "enum":["default1","default2"]}`
 	description := "desc1"
 	tvList := []TemplateVariableWithName{
 		{
 			Name:        "var1",
 			Description: &description,
-			Schema:      schema,
+			Schema:      schemaString,
 		},
 	}
 
@@ -80,7 +85,8 @@ func TestTemplateVarsWithNamesListToMap(t *testing.T) {
 		},
 	}
 
-	result := templateVarsWithNamesListToMap(tvList)
+	result, err := templateVarsWithNamesListToMap(tvList)
+	assert.NoError(t, err)
 	assert.Equal(t, expected, result)
 }
 

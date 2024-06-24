@@ -27,6 +27,7 @@ func TestAccRunQueueResource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", "example-queue"),
 					resource.TestCheckResourceAttr(resourceName, "resource", "kubernetes"),
 					resource.TestCheckResourceAttr(resourceName, "prioritization_mode", "V0"),
+					resource.TestCheckResourceAttr(resourceName, "external_links.label", "https://example.com"),
 				),
 			},
 			{
@@ -101,22 +102,31 @@ provider "wandb" {
 }
 
 resource "wandb_run_queue" "test" {
-  entity_name         = "terraform-acceptance-test"
-  name          = "example-queue"
-  resource            = "kubernetes"
-  resource_config     = jsonencode({
-    apiVersion = "batch/v1",
-    kind       = "Job",
-    metadata = {
-      name = "{{example-variable}}"
+  name        = "example-queue"
+  entity_name = "terraform-acceptance-test"
+
+  resource = "kubernetes"
+
+  resource_config = jsonencode({
+      apiVersion = "batch/v1",
+      kind       = "Job",
+      metadata = {
+        name = "{{exampleVariable}}"
+      }
+  })
+
+  template_variables = jsonencode({
+    exampleVariable = {
+	  schema = {
+        type = "string"
+      }
     }
   })
-  template_variables  = jsonencode({
-    example-variable = {
-		
+
   prioritization_mode = "V0"
-  external_links      = {
-    "label": "https://example.com"
+  external_links = {
+    "label" : "https://example.com",
+    "label2" : "https://example2.com"
   }
 }
 `

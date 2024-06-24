@@ -70,7 +70,7 @@ func parseCompositeID(compositeID string) (string, string, error) {
 
 func readRunQueueHelper(entityName, queueName string, ctx context.Context, client GraphQLClientWithHeaders) (*RunQueue, error) {
 	if entityName == "" || queueName == "" {
-		return nil, fmt.Errorf("entity_name and name must be specified")
+		return nil, fmt.Errorf("entity_name and name and name must be specified")
 	}
 
 	gqlReq := graphql.NewRequest(`
@@ -103,7 +103,7 @@ func readRunQueueHelper(entityName, queueName string, ctx context.Context, clien
 	gqlReq.Var("projectName", "model-registry")
 	var result struct {
 		Project struct {
-			RunQueue *RunQueue `json:"runQueue"`
+			RunQueue *RunQueue `json:"runQueue,omitempty"`
 		} `json:"project"`
 	}
 
@@ -118,15 +118,20 @@ func readRunQueueHelper(entityName, queueName string, ctx context.Context, clien
 	return result.Project.RunQueue, nil
 }
 
-func templateVarsWithNamesListToMap(tvList []TemplateVariableWithName) map[string]TemplateVariable {
+func templateVarsWithNamesListToMap(tvList []TemplateVariableWithName) (map[string]TemplateVariable, error) {
 	result := make(map[string]TemplateVariable)
+
 	for _, tv := range tvList {
+		var schema TVSchema
+		if err := json.Unmarshal([]byte(tv.Schema), &schema); err != nil {
+			return nil, err
+		}
 		result[tv.Name] = TemplateVariable{
 			Description: tv.Description,
-			Schema:      tv.Schema,
+			Schema:      schema,
 		}
 	}
-	return result
+	return result, nil
 }
 
 func injectResourceArgsAndResourceFields(resourceConfig string, resourceType string) (string, error) {
@@ -176,6 +181,9 @@ func stripResourceArgsAndResourceFields(resourceConfig, resourceType string) (st
 }
 
 func hasResourceArgsAndResourceFields(resourceConfig, resourceType string) (bool, error) {
+	if resourceConfig == "" {
+		return false, nil
+	}
 	var resourceArgs map[string]interface{}
 	if err := json.Unmarshal([]byte(resourceConfig), &resourceArgs); err != nil {
 		return false, err
@@ -193,4 +201,16 @@ func hasResourceArgsAndResourceFields(resourceConfig, resourceType string) (bool
 		}
 	}
 	return false, nil
+}
+
+func normalizeTemplateVariables(templateVariables string) (string, error) {
+	var normalized map[string]interface{}
+	if err := json.Unmarshal([]byte(templateVariables), &normalized); err != nil {
+		return "", err
+	}
+	normalizedBytes, err := json.Marshal(normalized)
+	if err != nil {
+		return "", err
+	}
+	return string(normalizedBytes), nil
 }

@@ -31,9 +31,17 @@ type TemplateVariableWithName struct {
 	Schema      string  `json:"schema"`
 }
 
+type TVSchema struct {
+	Type    string      `json:"type"`
+	Default string      `json:"default,omitempty"`
+	Enum    []string    `json:"enum,omitempty"`
+	Minimum interface{} `json:"minimum,omitempty"`
+	Maximum interface{} `json:"maximum,omitempty"`
+}
+
 type TemplateVariable struct {
-	Description *string `json:"description,omitempty"`
-	Schema      string  `json:"schema"`
+	Description *string  `json:"description,omitempty"`
+	Schema      TVSchema `json:"schema"`
 }
 
 type UpsertRunQueueInput struct {
@@ -49,7 +57,7 @@ type UpsertRunQueueInput struct {
 
 type UpsertRunQueueResponse struct {
 	UpsertRunQueue struct {
-		Success bool   `json:"success"`
-		Errors  string `json:"configSchemaValidationErrors"`
+		Success bool     `json:"success"`
+		Errors  []string `json:"configSchemaValidationErrors"`
 	} `json:"upsertRunQueue"`
 }

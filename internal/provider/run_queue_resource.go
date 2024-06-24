@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -128,6 +129,13 @@ func (r *RunQueueResource) Create(ctx context.Context, req resource.CreateReques
 		prioritizationMode = &defaultPrioritizationMode
 	}
 
+	normalizedTemplateVariables, err := normalizeTemplateVariables(data.TemplateVariables.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("Error normalizing template variables", err.Error())
+		return
+	}
+	data.TemplateVariables = types.StringValue(normalizedTemplateVariables)
+
 	// Inject resource args and fields into the resource config backend expects wrapped in these fields
 	resourceConfig, err := injectResourceArgsAndResourceFields(data.ResourceConfig.ValueString(), data.Resource.ValueString())
 	if err != nil {
@@ -164,8 +172,8 @@ func (r *RunQueueResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
-	if result.UpsertRunQueue.Errors != "" {
-		resp.Diagnostics.AddWarning("Config schema validation errors", result.UpsertRunQueue.Errors)
+	if len(result.UpsertRunQueue.Errors) > 0 {
+		resp.Diagnostics.AddWarning("Config schema validation errors", strings.Join(result.UpsertRunQueue.Errors, ", "))
 	}
 
 	id := generateCompositeID(data.EntityName.ValueString(), data.Name.ValueString())
@@ -212,7 +220,6 @@ func (r *RunQueueResource) Read(ctx context.Context, req resource.ReadRequest, r
 		resp.Diagnostics.AddError("Error marshalling resource config", err.Error())
 		return
 	}
-
 	// Check if the state resource config has resource args and fields
 	// if it doesn't we need to strip it from the returned config
 	hasFields, err := hasResourceArgsAndResourceFields(data.ResourceConfig.ValueString(), data.Resource.ValueString())
@@ -235,13 +242,22 @@ func (r *RunQueueResource) Read(ctx context.Context, req resource.ReadRequest, r
 	resp.Diagnostics.Append(externalLinksDiags...)
 
 	if len(runQueue.DefaultResourceConfig.TemplateVariables) > 0 {
-		tvMap := templateVarsWithNamesListToMap(runQueue.DefaultResourceConfig.TemplateVariables)
+		tvMap, err := templateVarsWithNamesListToMap(runQueue.DefaultResourceConfig.TemplateVariables)
+		if err != nil {
+			resp.Diagnostics.AddError("Error converting template variables", err.Error())
+			return
+		}
 		tvBytes, err := json.Marshal(tvMap)
 		if err != nil {
 			resp.Diagnostics.AddError("Error marshalling template variables", err.Error())
 			return
 		}
-		data.TemplateVariables = types.StringValue(string(tvBytes))
+		normalizedTemplateVariables, err := normalizeTemplateVariables(string(tvBytes))
+		if err != nil {
+			resp.Diagnostics.AddError("Error normalizing template variables", err.Error())
+			return
+		}
+		data.TemplateVariables = types.StringValue(normalizedTemplateVariables)
 	}
 	data.ExternalLinks = externalLinks
 
@@ -279,6 +295,14 @@ func (r *RunQueueResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
+	normalizedTemplateVariables, err := normalizeTemplateVariables(data.TemplateVariables.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("Error normalizing template variables", err.Error())
+		return
+	}
+
+	data.TemplateVariables = types.StringValue(normalizedTemplateVariables)
+
 	input := UpsertRunQueueInput{
 		QueueName:          data.Name.ValueString(),
 		EntityName:         data.EntityName.ValueString(),
@@ -300,8 +324,8 @@ func (r *RunQueueResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
-	if result.UpsertRunQueue.Errors != "" {
-		resp.Diagnostics.AddWarning("Config schema validation errors", result.UpsertRunQueue.Errors)
+	if len(result.UpsertRunQueue.Errors) > 0 {
+		resp.Diagnostics.AddWarning("Config schema validation errors", strings.Join(result.UpsertRunQueue.Errors, ", "))
 	}
 	id := generateCompositeID(data.EntityName.ValueString(), data.Name.ValueString())
 	data.Id = types.StringValue(id)

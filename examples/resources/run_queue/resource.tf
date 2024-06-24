@@ -4,12 +4,11 @@ resource "wandb_run_queue" "tf_example" {
 
   resource = "kubernetes"
 
-  resource_config = jsonencode({ "resource_args" : {
-    "kubernetes" : {
+  resource_config = jsonencode({
       apiVersion = "batch/v1",
       kind       = "Job",
       metadata = {
-        name = "{{example-variable}}"
+        name = "{{example_variable}}"
       },
       spec = {
         template = {
@@ -21,18 +20,13 @@ resource "wandb_run_queue" "tf_example" {
           }
         }
       }
-  } } })
+  })
 
   template_variables = jsonencode({
-    variable1 = {
-      name        = "example-variable",
+    example_variable = {
       description = "An example variable",
       schema = {
-        type    = "string",
-        minimum = 1,
-        maximum = 10,
-        enum    = ["option1", "option2"]
-        default = "option1"
+        type    = "string"
       }
     }
   })
