@@ -89,14 +89,6 @@ func testAccCheckRunQueueResourceDestroy(s *terraform.State) error {
 
 func testAccRunQueueResourceConfig() string {
 	return `
-terraform {
-  required_providers {
-    wandb = {
-      source = "wandb/wandb"
-    }
-  }
-}
-
 provider "wandb" {
 	version = "0.1.0"
 }
