@@ -63,7 +63,7 @@ func TestParseCompositeID_InvalidFormat(t *testing.T) {
 }
 
 func TestTemplateVarsWithNamesListToMap(t *testing.T) {
-	schema := TVSchema{
+	schema := TemplateVariableSchema{
 		Type:    "string",
 		Default: "default1",
 		Enum:    []string{"default1", "default2"},
@@ -88,6 +88,17 @@ func TestTemplateVarsWithNamesListToMap(t *testing.T) {
 	result, err := templateVarsWithNamesListToMap(tvList)
 	assert.NoError(t, err)
 	assert.Equal(t, expected, result)
+}
+
+func TestInjectResourceArgsAndResourceFieldsEmpty(t *testing.T) {
+	resourceConfig := ""
+	resourceType := "kubernetes"
+
+	expected := `{"resource_args":{"kubernetes":{}}}`
+
+	result, err := injectResourceArgsAndResourceFields(resourceConfig, resourceType)
+	assert.NoError(t, err)
+	assert.JSONEq(t, expected, result)
 }
 
 func TestInjectResourceArgsAndResourceFields(t *testing.T) {

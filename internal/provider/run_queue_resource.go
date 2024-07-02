@@ -129,12 +129,14 @@ func (r *RunQueueResource) Create(ctx context.Context, req resource.CreateReques
 		prioritizationMode = &defaultPrioritizationMode
 	}
 
-	normalizedTemplateVariables, err := normalizeTemplateVariables(data.TemplateVariables.ValueString())
+	normalizedTemplateVariables, err := normalizeTemplateVariables(data.TemplateVariables.ValueStringPointer())
 	if err != nil {
 		resp.Diagnostics.AddError("Error normalizing template variables", err.Error())
 		return
 	}
-	data.TemplateVariables = types.StringValue(normalizedTemplateVariables)
+	if normalizedTemplateVariables != nil {
+		data.TemplateVariables = types.StringValue(*normalizedTemplateVariables)
+	}
 
 	// Inject resource args and fields into the resource config backend expects wrapped in these fields
 	resourceConfig, err := injectResourceArgsAndResourceFields(data.ResourceConfig.ValueString(), data.Resource.ValueString())
@@ -252,12 +254,15 @@ func (r *RunQueueResource) Read(ctx context.Context, req resource.ReadRequest, r
 			resp.Diagnostics.AddError("Error marshalling template variables", err.Error())
 			return
 		}
-		normalizedTemplateVariables, err := normalizeTemplateVariables(string(tvBytes))
+		stringTemplateVariables := string(tvBytes)
+		normalizedTemplateVariables, err := normalizeTemplateVariables(&stringTemplateVariables)
 		if err != nil {
 			resp.Diagnostics.AddError("Error normalizing template variables", err.Error())
 			return
 		}
-		data.TemplateVariables = types.StringValue(normalizedTemplateVariables)
+		if normalizedTemplateVariables != nil {
+			data.TemplateVariables = types.StringValue(*normalizedTemplateVariables)
+		}
 	}
 	data.ExternalLinks = externalLinks
 
@@ -295,13 +300,14 @@ func (r *RunQueueResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
-	normalizedTemplateVariables, err := normalizeTemplateVariables(data.TemplateVariables.ValueString())
+	normalizedTemplateVariables, err := normalizeTemplateVariables(data.TemplateVariables.ValueStringPointer())
 	if err != nil {
 		resp.Diagnostics.AddError("Error normalizing template variables", err.Error())
 		return
 	}
-
-	data.TemplateVariables = types.StringValue(normalizedTemplateVariables)
+	if normalizedTemplateVariables != nil {
+		data.TemplateVariables = types.StringValue(*normalizedTemplateVariables)
+	}
 
 	input := UpsertRunQueueInput{
 		QueueName:          data.Name.ValueString(),

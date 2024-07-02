@@ -14,6 +14,7 @@ import (
 
 func TestAccRunQueueResource_basic(t *testing.T) {
 	resourceName := "wandb_run_queue.test"
+	resourceNameBasic := "wandb_run_queue.test-basic"
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProviderFactories,
@@ -32,6 +33,22 @@ func TestAccRunQueueResource_basic(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccRunQueueResourceConfigBasic(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRunQueueResourceExists(resourceNameBasic),
+					resource.TestCheckResourceAttr(resourceName, "entity_name", "terraform-acceptance-test"),
+					resource.TestCheckResourceAttr(resourceName, "name", "example-queue-basic"),
+					resource.TestCheckResourceAttr(resourceName, "resource", "kubernetes"),
+					resource.TestCheckResourceAttr(resourceName, "prioritization_mode", "V0"),
+					resource.TestCheckResourceAttr(resourceName, "external_links.label", "https://example.com"),
+				),
+			},
+			{
+				ResourceName:      resourceNameBasic,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -87,8 +104,46 @@ func testAccCheckRunQueueResourceDestroy(s *terraform.State) error {
 	return nil
 }
 
+func testAccRunQueueResourceConfigBasic() string {
+	return `
+terraform {
+  required_providers {
+    wandb = {
+	  source = "wandb/wandb"
+	}
+  }
+}
+
+
+provider "wandb" {
+	version = "0.1.0"
+}
+
+resource "wandb_run_queue" "test-basic" {
+  name        = "example-queue-basic"
+  entity_name = "terraform-acceptance-test"
+
+  resource = "kubernetes"
+
+  prioritization_mode = "V0"
+  external_links = {
+    "label" : "https://example.com",
+    "label2" : "https://example2.com"
+  }
+}
+`
+}
+
 func testAccRunQueueResourceConfig() string {
 	return `
+terraform {
+  required_providers {
+    wandb = {
+	  source = "wandb/wandb"
+	}
+  }
+}
+
 provider "wandb" {
 	version = "0.1.0"
 }

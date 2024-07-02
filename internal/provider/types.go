@@ -31,7 +31,7 @@ type TemplateVariableWithName struct {
 	Schema      string  `json:"schema"`
 }
 
-type TVSchema struct {
+type TemplateVariableSchema struct {
 	Type    string      `json:"type"`
 	Default string      `json:"default,omitempty"`
 	Enum    []string    `json:"enum,omitempty"`
@@ -40,8 +40,8 @@ type TVSchema struct {
 }
 
 type TemplateVariable struct {
-	Description *string  `json:"description,omitempty"`
-	Schema      TVSchema `json:"schema"`
+	Description *string                `json:"description,omitempty"`
+	Schema      TemplateVariableSchema `json:"schema"`
 }
 
 type UpsertRunQueueInput struct {

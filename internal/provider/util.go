@@ -122,7 +122,7 @@ func templateVarsWithNamesListToMap(tvList []TemplateVariableWithName) (map[stri
 	result := make(map[string]TemplateVariable)
 
 	for _, tv := range tvList {
-		var schema TVSchema
+		var schema TemplateVariableSchema
 		if err := json.Unmarshal([]byte(tv.Schema), &schema); err != nil {
 			return nil, err
 		}
@@ -135,6 +135,9 @@ func templateVarsWithNamesListToMap(tvList []TemplateVariableWithName) (map[stri
 }
 
 func injectResourceArgsAndResourceFields(resourceConfig string, resourceType string) (string, error) {
+	if resourceConfig == "" {
+		return fmt.Sprintf("{\"resource_args\":{\"%s\":{}}}", resourceType), nil
+	}
 	var resourceArgs map[string]interface{}
 	if err := json.Unmarshal([]byte(resourceConfig), &resourceArgs); err != nil {
 		return "", err
@@ -203,14 +206,19 @@ func hasResourceArgsAndResourceFields(resourceConfig, resourceType string) (bool
 	return false, nil
 }
 
-func normalizeTemplateVariables(templateVariables string) (string, error) {
+func normalizeTemplateVariables(templateVariables *string) (*string, error) {
+	if templateVariables == nil {
+		return nil, nil
+	}
+
 	var normalized map[string]interface{}
-	if err := json.Unmarshal([]byte(templateVariables), &normalized); err != nil {
-		return "", err
+	if err := json.Unmarshal([]byte(*templateVariables), &normalized); err != nil {
+		return nil, err
 	}
 	normalizedBytes, err := json.Marshal(normalized)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return string(normalizedBytes), nil
+	normalizedString := string(normalizedBytes)
+	return &normalizedString, nil
 }
