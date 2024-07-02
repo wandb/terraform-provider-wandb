@@ -154,8 +154,9 @@ func injectResourceArgsAndResourceFields(resourceConfig string, resourceType str
 			return "", err
 		}
 		return string(resourceBytes), nil
+	} else {
+		return "", fmt.Errorf("invalid resource_config, resource_config should be provided as a map of arguments for the resource or a kubernetes job spec. See details for specific resource here: https://docs.wandb.ai/guides/launch/setup-launch")
 	}
-	return resourceConfig, nil
 }
 
 func stripResourceArgsAndResourceFields(resourceConfig, resourceType string) (string, error) {
@@ -181,29 +182,6 @@ func stripResourceArgsAndResourceFields(resourceConfig, resourceType string) (st
 	} else {
 		return "", fmt.Errorf("resource_args not found in resource config")
 	}
-}
-
-func hasResourceArgsAndResourceFields(resourceConfig, resourceType string) (bool, error) {
-	if resourceConfig == "" {
-		return false, nil
-	}
-	var resourceArgs map[string]interface{}
-	if err := json.Unmarshal([]byte(resourceConfig), &resourceArgs); err != nil {
-		return false, err
-	}
-
-	if _, ok := resourceArgs["resource_args"]; ok {
-		resourceArgs, ok := resourceArgs["resource_args"].(map[string]interface{})
-		if !ok {
-			return false, fmt.Errorf("resource_args is not a map")
-		}
-		if _, ok := resourceArgs[resourceType]; ok {
-			return true, nil
-		} else {
-			return false, fmt.Errorf("resource type %s not found in resource_args", resourceType)
-		}
-	}
-	return false, nil
 }
 
 func normalizeTemplateVariables(templateVariables *string) (*string, error) {

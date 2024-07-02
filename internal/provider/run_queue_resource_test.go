@@ -12,14 +12,31 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
-func TestAccRunQueueResource_basic(t *testing.T) {
-	resourceName := "wandb_run_queue.test"
+func TestAccRunQueueResource(t *testing.T) {
 	resourceNameBasic := "wandb_run_queue.test-basic"
+	resourceName := "wandb_run_queue.test"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProviderFactories,
 		CheckDestroy:             testAccCheckRunQueueResourceDestroy,
 		Steps: []resource.TestStep{
+			{
+				Config: testAccRunQueueResourceConfigBasic(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRunQueueResourceExists(resourceNameBasic),
+					resource.TestCheckResourceAttr(resourceNameBasic, "entity_name", "terraform-acceptance-test"),
+					resource.TestCheckResourceAttr(resourceNameBasic, "name", "example-queue-basic"),
+					resource.TestCheckResourceAttr(resourceNameBasic, "resource", "kubernetes"),
+					resource.TestCheckResourceAttr(resourceNameBasic, "prioritization_mode", "V0"),
+					resource.TestCheckResourceAttr(resourceNameBasic, "external_links.label", "https://example.com"),
+				),
+			},
+			{
+				ResourceName:      resourceNameBasic,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 			{
 				Config: testAccRunQueueResourceConfig(),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -33,22 +50,6 @@ func TestAccRunQueueResource_basic(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccRunQueueResourceConfigBasic(),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRunQueueResourceExists(resourceNameBasic),
-					resource.TestCheckResourceAttr(resourceName, "entity_name", "terraform-acceptance-test"),
-					resource.TestCheckResourceAttr(resourceName, "name", "example-queue-basic"),
-					resource.TestCheckResourceAttr(resourceName, "resource", "kubernetes"),
-					resource.TestCheckResourceAttr(resourceName, "prioritization_mode", "V0"),
-					resource.TestCheckResourceAttr(resourceName, "external_links.label", "https://example.com"),
-				),
-			},
-			{
-				ResourceName:      resourceNameBasic,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -106,19 +107,6 @@ func testAccCheckRunQueueResourceDestroy(s *terraform.State) error {
 
 func testAccRunQueueResourceConfigBasic() string {
 	return `
-terraform {
-  required_providers {
-    wandb = {
-	  source = "wandb/wandb"
-	}
-  }
-}
-
-
-provider "wandb" {
-	version = "0.1.0"
-}
-
 resource "wandb_run_queue" "test-basic" {
   name        = "example-queue-basic"
   entity_name = "terraform-acceptance-test"
@@ -136,18 +124,6 @@ resource "wandb_run_queue" "test-basic" {
 
 func testAccRunQueueResourceConfig() string {
 	return `
-terraform {
-  required_providers {
-    wandb = {
-	  source = "wandb/wandb"
-	}
-  }
-}
-
-provider "wandb" {
-	version = "0.1.0"
-}
-
 resource "wandb_run_queue" "test" {
   name        = "example-queue"
   entity_name = "terraform-acceptance-test"

@@ -116,7 +116,6 @@ func TestInjectResourceArgsAndResourceFields_AlreadyPresent(t *testing.T) {
 	resourceConfig := `{"resource_args":{"kubernetes":{"apiVersion":"batch/v1","kind":"Job","metadata":{"name":"example-job"}}}}`
 	resourceType := "kubernetes"
 
-	result, err := injectResourceArgsAndResourceFields(resourceConfig, resourceType)
-	assert.NoError(t, err)
-	assert.JSONEq(t, resourceConfig, result)
+	_, err := injectResourceArgsAndResourceFields(resourceConfig, resourceType)
+	assert.Error(t, err, "invalid resource_config, resource_config should be provided as a map of arguments for the resource or a kubernetes job spec. See details for specific resource here: https://docs.wandb.ai/guides/launch/setup-launch")
 }
