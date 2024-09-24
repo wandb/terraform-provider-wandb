@@ -1,8 +1,7 @@
 terraform {
   required_providers {
     wandb = {
-      source  = "wandb/wandb"
-      version = "0.1.0"
+      source = "wandb/wandb"
     }
   }
 }

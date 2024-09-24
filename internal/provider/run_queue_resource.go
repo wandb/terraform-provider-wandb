@@ -47,7 +47,7 @@ func (r *RunQueueResource) Metadata(ctx context.Context, req resource.MetadataRe
 
 func (r *RunQueueResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "RunQueue resource used with W&B Launch. See: https://docs.wandb.ai/guides/launch",
+		MarkdownDescription: "RunQueue resource used with W&B Launch. See: https://docs.wandb.ai/guides/launch. See [here](https://github.com/wandb/terraform-provider-wandb/blob/main/examples/resources/run_queue/resource.tf) for an example",
 
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{

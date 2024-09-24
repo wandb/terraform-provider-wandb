@@ -3,12 +3,12 @@
 page_title: "wandb_run_queue Resource - wandb"
 subcategory: ""
 description: |-
-  RunQueue resource used with W&B Launch. See: https://docs.wandb.ai/guides/launch
+  RunQueue resource used with W&B Launch. See: https://docs.wandb.ai/guides/launch. See here https://github.com/wandb/terraform-provider-wandb/blob/main/examples/resources/run_queue/resource.tf for an example
 ---
 
 # wandb_run_queue (Resource)
 
-RunQueue resource used with W&B Launch. See: https://docs.wandb.ai/guides/launch
+RunQueue resource used with W&B Launch. See: https://docs.wandb.ai/guides/launch. See [here](https://github.com/wandb/terraform-provider-wandb/blob/main/examples/resources/run_queue/resource.tf) for an example
 
 
 
